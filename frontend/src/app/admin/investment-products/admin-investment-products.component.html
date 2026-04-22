@@ -1,0 +1,63 @@
+<app-admin-layout>
+
+  <!-- HEADER -->
+  <div class="flex justify-between items-center px-8 py-6">
+    <h1 class="text-xl font-semibold">Investment Products</h1>
+
+    <button class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm">
+      + Add Advisors
+    </button>
+  </div>
+
+  <!-- PRODUCT GRID -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-8">
+
+    <!-- PRODUCT CARD -->
+    <div
+      *ngFor="let product of products"
+      class="bg-white rounded-xl shadow border border-gray-200 p-6"
+    >
+
+      <!-- TITLE -->
+      <h2 class="text-lg font-semibold text-gray-800 mb-1">
+        {{ product.name }}
+      </h2>
+
+      <!-- CATEGORY -->
+      <p class="text-sm text-gray-400 mb-4">
+        {{ product.category }}
+      </p>
+
+      <!-- DETAILS -->
+      <div class="text-sm space-y-2">
+
+        <div class="flex justify-between">
+          <span class="text-gray-500">Interest Rate</span>
+          <span class="font-medium">{{ product.interestRate }}</span>
+        </div>
+
+        <div class="flex justify-between">
+          <span class="text-gray-500">Min Investment</span>
+          <span class="font-medium">{{ product.minInvestment }}</span>
+        </div>
+
+        <div class="flex justify-between">
+          <span class="text-gray-500">Total Return</span>
+          <span class="font-medium">{{ product.totalReturn }}</span>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- EMPTY STATE -->
+    <div
+      *ngIf="!products || products.length === 0"
+      class="col-span-full text-center text-gray-400 py-20"
+    >
+      No investment products available
+    </div>
+
+  </div>
+
+</app-admin-layout>

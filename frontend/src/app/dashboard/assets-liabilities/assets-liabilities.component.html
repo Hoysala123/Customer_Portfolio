@@ -1,0 +1,177 @@
+<div class="w-full">
+
+  <!-- PAGE TITLE -->
+  <h1 class="text-2xl font-semibold mb-8 text-gray-800">Assets & Liabilities</h1>
+
+  <!-- PREMIUM TABS -->
+  <div class="flex gap-4 mb-8">
+
+    <!-- BONDS TAB -->
+    <button
+      (click)="tab='bonds'"
+      class="px-6 py-2 rounded-full text-sm font-medium transition shadow-md"
+      [ngClass]="tab==='bonds'
+        ? 'bg-[#3B82F6] text-white shadow-lg'
+        : 'bg-gray-200 text-gray-600 hover:bg-gray-300'">
+      Bonds
+    </button>
+
+    <!-- FIXED DEPOSIT TAB -->
+    <button
+      (click)="tab='fd'"
+      class="px-6 py-2 rounded-full text-sm font-medium transition shadow-md"
+      [ngClass]="tab==='fd'
+        ? 'bg-[#3B82F6] text-white shadow-lg'
+        : 'bg-gray-200 text-gray-600 hover:bg-gray-300'">
+      Fixed Deposit
+    </button>
+
+    <!-- LOANS TAB -->
+    <button
+      (click)="tab='loans'"
+      class="px-6 py-2 rounded-full text-sm font-medium transition shadow-md"
+      [ngClass]="tab==='loans'
+        ? 'bg-[#3B82F6] text-gray-900 shadow-lg'
+        : 'bg-gray-200 text-gray-600 hover:bg-gray-300'">
+      Loans
+    </button>
+
+  </div>
+
+  <!-- FORM CARD COMMON WRAPPER -->
+  <div class="bg-white rounded-2xl shadow-xl w-[520px] p-8">
+
+    <!-- ====================== BONDS FORM ====================== -->
+    <div *ngIf="tab === 'bonds'">
+
+      <div class="flex items-center gap-3 mb-6">
+        <!-- <div class="w-10 h-10 bg-[#3B82F6]/20 flex items-center justify-center rounded-xl">
+          assets/icons/bonds.png
+        </div> -->
+        <h2 class="text-xl font-semibold text-gray-800">Add Bonds</h2>
+      </div>
+
+      <div class="space-y-4">
+
+        <input [(ngModel)]="bondsForm.name"
+               placeholder="Bond Name"
+               class="input-premium" />
+
+
+        <input [(ngModel)]="bondsForm.purchaseDate"
+                placeholder="YYYY-MM-DD Purchase Date"
+               
+               class="input-premium" />
+
+        <input [(ngModel)]="bondsForm.dueDate"
+              placeholder="YYYY-MM-DD Maturity Date"
+               
+               class="input-premium" />
+
+        <input [(ngModel)]="bondsForm.interest"
+               placeholder="Interest (%)"
+               class="input-premium" />
+
+        <input [(ngModel)]="bondsForm.amount"
+               placeholder="Amount"
+               class="input-premium" />
+
+      </div>
+
+      <button
+        (click)="saveBonds()"
+        class="w-full mt-6 bg-gradient-to-r from-indigo-500 to-blue-600 text-white py-3 rounded-xl shadow-md hover:opacity-90">
+        Submit
+      </button>
+    </div>
+
+    <!-- ====================== FIXED DEPOSIT FORM ====================== -->
+    <div *ngIf="tab === 'fd'">
+
+      <div class="flex items-center gap-3 mb-6">
+        <!-- <div class="w-10 h-10 bg-[#EC4899]/20 flex items-center justify-center rounded-xl">
+          assets/icons/fd.png
+        </div> -->
+        <h2 class="text-xl font-semibold text-gray-800">Add Fixed Deposit</h2>
+      </div>
+
+      <div class="space-y-4">
+
+        <input [(ngModel)]="fdForm.name"
+               placeholder="FD Name"
+               class="input-premium" />
+
+        <input [(ngModel)]="fdForm.purchaseDate"
+                placeholder="YYYY-MM-DD Purchase Date"
+               
+               class="input-premium" />
+
+        <input [(ngModel)]="fdForm.dueDate"
+        placeholder="YYYY-MM-DD Maturity Date"
+               
+               class="input-premium" />
+
+        <input [(ngModel)]="fdForm.interest"
+               placeholder="Interest (%)"
+               class="input-premium" />
+
+        <input [(ngModel)]="fdForm.amount"
+               placeholder="Amount"
+               class="input-premium" />
+
+      </div>
+
+
+      <button
+        (click)="saveFD()"
+        class="w-full mt-6 bg-gradient-to-r from-indigo-500 to-blue-600 text-white py-3 rounded-xl shadow-md hover:opacity-90">
+        Submit
+      </button>
+    </div>
+
+    <!-- ====================== LOANS FORM ====================== -->
+    <div *ngIf="tab === 'loans'">
+
+      <div class="flex items-center gap-3 mb-6">
+        <!-- <div class="w-10 h-10 bg-[#FACC15]/40 flex items-center justify-center rounded-xl">
+          assets/icons/loans.png
+        </div> -->
+        <h2 class="text-xl font-semibold text-gray-800">Add Loan</h2>
+      </div>
+
+      <div class="space-y-4">
+
+        <input [(ngModel)]="loanForm.name"
+               placeholder="Loan Type"
+               class="input-premium" />
+
+        <input [(ngModel)]="loanForm.issuedDate"
+        placeholder="YYYY-MM-DD Issued Date"
+             
+               class="input-premium" />
+
+        <input [(ngModel)]="loanForm.dueDate"
+        placeholder="YYYY-MM-DD Due Date"
+               
+               class="input-premium" />
+
+        <input [(ngModel)]="loanForm.interest"
+               placeholder="Interest (%)"
+               class="input-premium" />
+
+        <input [(ngModel)]="loanForm.amount"
+               placeholder="Amount"
+               class="input-premium" />
+      </div>
+
+      <button
+        (click)="saveLoan()"
+        class="w-full mt-6 bg-gradient-to-r from-indigo-500 to-blue-600 text-white py-3 rounded-xl shadow-md hover:opacity-90">
+        Submit
+      </button>
+
+    </div>
+
+  </div>
+
+</div>

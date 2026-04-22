@@ -1,0 +1,93 @@
+<app-admin-layout>
+
+  <!-- HEADER -->
+  <div class="flex justify-between items-center px-8 py-6">
+    <h1 class="text-xl font-semibold">Notifications</h1>
+
+    <button class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm">
+      + Add Advisors
+    </button>
+  </div>
+
+  <!-- ERROR MESSAGE -->
+  <div *ngIf="errorMessage" class="mx-8 mb-4 p-4 bg-red-100 text-red-700 rounded-md">
+    {{ errorMessage }}
+  </div>
+
+  <!-- LOADING -->
+  <div *ngIf="loading" class="mx-8 mb-4 p-4 bg-blue-100 text-blue-700 rounded-md">
+    Loading KYC requests...
+  </div>
+
+  <!-- CARD -->
+  <div class="bg-white rounded-xl shadow-sm mx-8 p-6">
+
+    <!-- TOP BAR -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+
+      <h2 class="font-medium text-lg">Customer KYC Table</h2>
+
+    </div>
+
+    <!-- TABLE -->
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+
+        <thead class="text-gray-500 border-b">
+          <tr>
+            <th class="text-left py-3 w-[22%]">Customer Name</th>
+            <th class="text-left py-3 w-[18%]">Phone Number</th>
+            <th class="text-left py-3 w-[35%]">Email</th>
+            <th class="text-center py-3 w-[25%]">Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <tr
+            *ngFor="let kyc of kycRequests"
+            class="border-b hover:bg-gray-50"
+          >
+            <td class="py-3">{{ kyc.customerName }}</td>
+            <td>{{ kyc.phone }}</td>
+            <td>{{ kyc.email }}</td>
+
+            <td class="text-center space-x-2">
+              <button
+                class="px-3 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700 hover:bg-green-200"
+                (click)="approveKyc(kyc.id)"
+                [disabled]="loading">
+                Approve
+              </button>
+              <button
+                class="px-3 py-1 rounded-md text-xs font-medium bg-red-100 text-red-600 hover:bg-red-200"
+                (click)="declineKyc(kyc.id)"
+                [disabled]="loading">
+                Decline
+              </button>
+            </td>
+          </tr>
+
+          <!-- EMPTY STATE -->
+          <tr *ngIf="!kycRequests || kycRequests.length === 0">
+            <td colspan="4" class="text-center text-gray-400 py-10">
+              No KYC requests available
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="flex justify-between items-center text-xs text-gray-500 mt-4">
+      <p>Showing {{ kycRequests?.length || 0 }} entries</p>
+
+      <!-- <div class="flex gap-2">
+        <button class="px-2 py-1 border rounded">1</button>
+        <button class="px-2 py-1 border rounded">2</button>
+      </div> -->
+    </div>
+
+  </div>
+</app-admin-layout>

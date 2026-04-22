@@ -1,0 +1,107 @@
+<app-advisor-layout>
+
+  <!-- HEADER -->
+  <div class="px-8 py-6 flex justify-between items-center">
+    <h1 class="text-xl font-semibold">Customers</h1>
+  </div>
+
+  <!-- TABLE CARD -->
+  <div class="bg-white rounded-xl shadow-sm mx-8 p-6 overflow-x-auto">
+
+    <table class="w-full text-sm table-fixed">
+      <thead class="text-gray-500 border-b">
+        <tr>
+          <th class="w-[5%] text-left py-3">S.No</th>
+          <th class="w-[20%] text-left py-3">Name</th>
+          <th class="w-[15%]">Assets</th>
+          <th class="w-[15%]">Liabilities</th>
+          <th class="w-[20%]">Risk</th>
+          <th class="w-[10%]">Alert</th>
+          <th class="w-[10%]">View portfolio</th>
+          <th class="w-[5%]">Report</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        <tr
+          *ngFor="let customer of customers; let i = index"
+          class="border-b hover:bg-gray-50"
+        >
+          <td class="py-3">{{ i + 1 }}</td>
+          <td class="py-3 font-medium">{{ customer.name }}</td>
+
+          <td>{{ customer.assets }}</td>
+          <td>{{ customer.liabilities }}</td>
+
+          <!-- RISK -->
+          <td class="space-y-2">
+            <div class="flex flex-wrap gap-1">
+              <button
+                class="px-2 py-1 rounded-md text-xs border hover:border-blue-500"
+                [class.bg-red-500]="customer.risk === 'High'"
+                [class.text-white]="customer.risk === 'High'"
+                (click)="setRiskLevel(customer.id, 'High')">
+                High
+              </button>
+              <button
+                class="px-2 py-1 rounded-md text-xs border hover:border-blue-500"
+                [class.bg-yellow-500]="customer.risk === 'Medium'"
+                [class.text-white]="customer.risk === 'Medium'"
+                (click)="setRiskLevel(customer.id, 'Medium')">
+                Medium
+              </button>
+              <button
+                class="px-2 py-1 rounded-md text-xs border hover:border-blue-500"
+                [class.bg-green-500]="customer.risk === 'Low'"
+                [class.text-white]="customer.risk === 'Low'"
+                (click)="setRiskLevel(customer.id, 'Low')">
+                Low
+              </button>
+            </div>
+          </td>
+
+          <!-- ALERT -->
+          <td class="text-center space-y-2 py-3">
+            <span
+              *ngIf="customer.alert"
+              class="inline-block w-2 h-2 bg-red-500 rounded-full mx-auto">
+            </span>
+            <button
+              class="px-2 py-1 rounded-md text-xs bg-orange-500 text-white hover:bg-orange-600"
+              (click)="sendAlert(customer.id)">
+              Alert
+            </button>
+          </td>
+
+          <!-- LINK TO PORTFOLIO -->
+          <td class="text-center">
+            <button
+              class="text-blue-600 hover:underline text-xs"
+              (click)="openPortfolio(customer.id)">
+              Go
+            </button>
+          </td>
+
+          <!-- REPORT -->
+          <td class="text-center">
+            <button
+              class="bg-blue-600 text-white rounded-md px-3 py-1 text-xs"
+              (click)="downloadReport(customer.id)">
+              Download
+            </button>
+          </td>
+        </tr>
+
+        <!-- EMPTY STATE -->
+        <tr *ngIf="!customers || customers.length === 0">
+          <td colspan="8" class="text-center text-gray-400 py-10">
+            No customers assigned
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+</app-advisor-layout>

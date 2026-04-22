@@ -1,0 +1,79 @@
+<div class="w-full">
+
+  <!-- PAGE TITLE -->
+  <h1 class="text-2xl font-semibold mb-8 text-gray-800">Analysis</h1>
+
+  <!-- PREMIUM 3-CARD GRID -->
+  <div class="grid grid-cols-3 gap-8">
+
+    <!-- ========== ASSETS CARD ========== -->
+    <div class="bg-white p-8 rounded-2xl shadow-xl flex flex-col items-center">
+      
+      <div class="flex items-center gap-3 mb-4">
+        <!-- <div class="w-12 h-12 bg-[#3B82F6]/20 rounded-xl flex items-center justify-center">
+          assets/icons/assets.png
+        </div> -->
+        <h2 class="text-xl font-semibold text-gray-800">Assets</h2>
+      </div>
+
+      <!-- Donut Placeholder -->
+      <div class="w-44 h-44 rounded-full border-8 border-[#3B82F6] flex items-center justify-center">
+        <span class="text-3xl font-extrabold text-[#3B82F6]">
+          {{ assetsPercent }}%
+        </span>
+      </div>
+
+      <p class="mt-4 text-gray-600 text-sm text-center">
+        Percentage of your total investment represented by assets.
+      </p>
+    </div>
+
+
+    <!-- ========== LIABILITIES CARD ========== -->
+    <div class="bg-white p-8 rounded-2xl shadow-xl flex flex-col items-center">
+
+      <div class="flex items-center gap-3 mb-4">
+        <!-- <div class="w-12 h-12 bg-[#EC4899]/20 rounded-xl flex items-center justify-center">
+          assets/icons/liability.png
+        </div> -->
+        <h2 class="text-xl font-semibold text-gray-800">Liabilities</h2>
+      </div>
+
+      <!-- Donut Placeholder -->
+      <div class="w-44 h-44 rounded-full border-8 border-[#EC4899] flex items-center justify-center">
+        <span class="text-3xl font-extrabold text-[#EC4899]">
+          {{ liabilitiesPercent }}%
+        </span>
+      </div>
+
+      <p class="mt-4 text-gray-600 text-sm text-center">
+        Percentage of your obligations and outstanding payments.
+      </p>
+    </div>
+
+
+    <!-- ========== COMBINED ANALYSIS CARD ========== -->
+    <div class="bg-white p-8 rounded-2xl shadow-xl flex flex-col items-center">
+
+      <div class="flex items-center gap-3 mb-4">
+        <!-- <div class="w-12 h-12 bg-[#FACC15]/30 rounded-xl flex items-center justify-center">
+          assets/icons/combined.png
+        </div> -->
+        <h2 class="text-xl font-semibold text-gray-800">{{ combined.title }}</h2>
+      </div>
+
+      <!-- Donut Placeholder -->
+      <div class="w-44 h-44 rounded-full border-8 border-[#FACC15] flex items-center justify-center">
+        <span class="text-3xl font-extrabold text-[#CA8A04]">
+          {{ combined.value }}%
+        </span>
+      </div>
+
+      <p class="mt-4 text-gray-600 text-sm text-center">
+        A combined financial score based on your total assets and liabilities.
+      </p>
+    </div>
+
+  </div>
+
+</div>

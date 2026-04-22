@@ -1,0 +1,164 @@
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { BaseChartDirective } from 'ng2-charts';
+import { ChartConfiguration } from 'chart.js';
+import { AdminLayoutComponent } from '../layout/admin-layout.component';
+import { AdminApiService } from '../api/admin-api.service';
+
+@Component({
+  selector: 'app-admin-dashboard',
+  standalone: true,
+  imports: [CommonModule, FormsModule, AdminLayoutComponent, BaseChartDirective],
+  templateUrl: './admin-dashboard.component.html'
+})
+export class AdminDashboardComponent implements OnInit {
+
+  // ✅ Correct default
+  selectedAdvisorId: string = '';
+
+  advisors: { id: string; name: string }[] = [];
+
+  barChartData: ChartConfiguration<'bar'>['data'] = {
+    labels: ['Loading...'],
+    datasets: [
+      {
+        label: 'Portfolio Performance',
+        data: [0],
+        backgroundColor: '#3b82f6',
+        borderColor: '#1e40af',
+        borderWidth: 1
+      }
+    ]
+  };
+
+  barChartOptions: ChartConfiguration<'bar'>['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      y: { beginAtZero: true }
+    }
+  };
+
+  pieChartData: ChartConfiguration<'pie'>['data'] = {
+    labels: ['Bonds', 'Fixed Deposits', 'Loans'],
+    datasets: []
+  };
+
+  pieChartOptions: ChartConfiguration<'pie'>['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false }
+    }
+  };
+
+  summary?: {
+    totalUsers: number;
+    totalCustomers: number;
+    totalAssets: number;
+    activeAlerts: number;
+  };
+
+  portfolioData?: any[];
+  assetAllocation?: any[];
+  auditLogs: any[] = [];
+  customerReports?: any[];
+
+  constructor(
+    private adminApi: AdminApiService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit(): void {
+    this.loadAdvisors();
+    this.loadDashboardSummary();
+    this.loadCustomerReports();
+    this.loadAuditLogs();
+    this.loadPortfolioPerformance();
+    this.loadAssetAllocation();
+  }
+
+  loadAdvisors(): void {
+    this.adminApi.getAdvisors().subscribe({
+      next: data => {
+        this.advisors = data.map(a => ({
+          id: a.id,
+          name: a.name
+        }));
+      }
+    });
+  }
+
+  // ✅ FIXED: no arguments passed
+  loadDashboardSummary(): void {
+    this.adminApi.getDashboardSummary().subscribe({
+      next: data => this.summary = data
+    });
+  }
+
+  // ✅ FIXED: no arguments passed
+  loadCustomerReports(): void {
+    this.adminApi.getCustomerReports().subscribe({
+      next: data => this.customerReports = data
+    });
+  }
+
+  loadAuditLogs(): void {
+    this.adminApi.getAuditLogs().subscribe({
+      next: data => this.auditLogs = data
+    });
+  }
+
+  // ✅ These APIs ALREADY accept advisorId → leave untouched
+  loadPortfolioPerformance(): void {
+    this.adminApi
+      .getPortfolioPerformance(this.selectedAdvisorId)
+      .subscribe({
+        next: data => {
+          this.portfolioData = data;
+          this.updateBarChart(data);
+        }
+      });
+  }
+
+  loadAssetAllocation(): void {
+    this.adminApi
+      .getAssetAllocation(this.selectedAdvisorId)
+      .subscribe({
+        next: data => this.updatePieChart(data)
+      });
+  }
+
+  private updateBarChart(data: any[]): void {
+    this.barChartData = {
+      labels: data.map(d => d.month || d.name),
+      datasets: [
+        {
+          label: 'Portfolio Performance',
+          data: data.map(d => d.value),
+          backgroundColor: '#3b82f6'
+        }
+      ]
+    };
+    this.cdr.detectChanges();
+  }
+
+  private updatePieChart(data: any[]): void {
+    this.pieChartData = {
+      labels: data.map(d => d.label),
+      datasets: [
+        {
+          data: data.map(d => d.percentage),
+          backgroundColor: ['#60a5fa', '#34d399', '#fbbf24']
+        }
+      ]
+    };
+  }
+
+  // ✅ Safe reload
+  onAdvisorChange(): void {
+    this.loadPortfolioPerformance();
+    this.loadAssetAllocation();
+  }
+}

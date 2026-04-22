@@ -1,0 +1,150 @@
+.dashboard-container {
+  display: flex;
+  height: 100vh;
+  background: #f5f6f8;
+  font-family: Arial, sans-serif;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 240px;
+  background: white;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.brand {
+  font-size: 22px;
+  font-weight: bold;
+  color: #16a34a;
+}
+
+.profile {
+  text-align: center;
+  margin: 30px 0;
+}
+
+.profile img {
+  width: 60px;
+  border-radius: 50%;
+  margin-bottom: 10px;
+}
+
+.menu a {
+  display: block;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 5px;
+  cursor: pointer;
+}
+
+.menu a.active,
+.menu a:hover {
+  background: #e5f7ee;
+}
+
+.logout {
+  margin-top: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #ef4444;
+}
+
+/* CONTENT */
+.content {
+  flex: 1;
+  padding: 25px;
+}
+
+.content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.primary-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* STATS */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.stat-card {
+  background: white;
+  padding: 16px;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.stat-card h2 {
+  margin-top: 8px;
+}
+
+/* CHARTS */
+.charts {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.chart-card {
+  background: white;
+  padding: 16px;
+  border-radius: 10px;
+}
+
+.chart-placeholder {
+  height: 200px;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+}
+
+/* AUDIT LOGS */
+.audit-logs {
+  background: white;
+  padding: 16px;
+  border-radius: 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 10px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.success {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.failed {
+  background: #fee2e2;
+  color: #b91c1c;
+}

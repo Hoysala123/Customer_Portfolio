@@ -1,0 +1,145 @@
+<div class="min-h-screen bg-white relative">
+
+  <!-- PAGE LEVEL LOGO (TOP LEFT) -->
+  <div class="absolute top-4 left-8 flex items-center gap-3 z-20">
+    <img
+      src="assets/finvista-logo.png"
+      alt="FinVista Logo"
+      class="h-14 w-auto"
+    />
+    <span class="text-2xl font-semibold text-green-800">
+      FinVista
+    </span>
+  </div>
+
+  <!-- CENTERED CONTAINER -->
+  <div class="min-h-screen flex items-center justify-center px-10">
+
+    <!-- MAIN CONNECTED CARD -->
+    <div
+      class="w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden flex"
+    >
+
+      <!-- LEFT IMAGE SECTION -->
+      <div class="hidden md:flex w-1/2">
+        <img
+          src="https://tse1.mm.bing.net/th/id/OIP.86TMAMkCY_13pN3kzDEXgAHaE8?rs=1&pid=ImgDetMain&o=7&rm=3"
+          alt="Login Illustration"
+          class="w-full h-full object-cover opacity-80"
+        />
+      </div>
+
+      <!-- RIGHT LOGIN SECTION -->
+      <div
+        class="w-full md:w-1/2 flex items-center justify-center px-12"
+        style="height: 520px;"
+      >
+
+        <div class="w-[380px]">
+
+          <!-- ROLE SELECTION -->
+          <div class="flex justify-center gap-3 mb-6">
+            <button
+              class="px-4 py-2 rounded-lg text-sm font-medium transition"
+              [ngClass]="activeRole === 'Customer'
+                ? 'bg-indigo-500 text-white'
+                : 'bg-gray-200'"
+              (click)="selectRole('Customer')"
+            >
+              Customer
+            </button>
+
+            <button
+              class="px-4 py-2 rounded-lg text-sm font-medium transition"
+              [ngClass]="activeRole === 'Admin'
+                ? 'bg-indigo-500 text-white'
+                : 'bg-gray-200'"
+              (click)="selectRole('Admin')"
+            >
+              Admin
+            </button>
+
+            <button
+              class="px-4 py-2 rounded-lg text-sm font-medium transition"
+              [ngClass]="activeRole === 'Advisor'
+                ? 'bg-indigo-500 text-white'
+                : 'bg-gray-200'"
+              (click)="selectRole('Advisor')"
+            >
+              Advisor
+            </button>
+          </div>
+
+          <!-- HEADER -->
+          <h2 class="text-2xl font-semibold text-center mb-1">
+            Welcome back
+          </h2>
+
+          <p class="text-sm text-gray-500 text-center mb-6">
+            Enter your credentials to access your account
+          </p>
+
+          <!-- CUSTOMER USERNAME -->
+          <div *ngIf="activeRole === 'Customer'">
+            <label class="text-sm font-medium">Username</label>
+            <input
+              type="text"
+              placeholder="Enter username"
+              [(ngModel)]="credentials.username"
+              class="w-full border rounded-lg px-4 py-2 mt-1 mb-4
+                     focus:ring-2 focus:ring-indigo-400"
+            />
+          </div>
+
+          <!-- ADMIN / ADVISOR EMAIL -->
+          <div *ngIf="activeRole !== 'Customer'">
+            <label class="text-sm font-medium">Email</label>
+            <input
+              type="email"
+              placeholder="you@example.com"
+              [(ngModel)]="credentials.email"
+              class="w-full border rounded-lg px-4 py-2 mt-1 mb-4
+                     focus:ring-2 focus:ring-indigo-400"
+            />
+          </div>
+
+          <!-- PASSWORD -->
+          <label class="text-sm font-medium">Password</label>
+          <input
+            type="password"
+            placeholder="********"
+            [(ngModel)]="credentials.password"
+            class="w-full border rounded-lg px-4 py-2 mt-1 mb-6
+                   focus:ring-2 focus:ring-indigo-400"
+          />
+
+          <!-- LOGIN BUTTON -->
+          <button
+            class="w-full h-[42px] rounded-lg text-white font-semibold
+                   bg-gradient-to-r from-indigo-500 to-blue-600
+                   hover:opacity-95 transition"
+            (click)="login()"
+          >
+            Login
+          </button>
+
+          <!-- SIGN UP (CUSTOMER ONLY) -->
+          <p
+            *ngIf="activeRole === 'Customer'"
+            class="text-sm text-center mt-4 text-gray-500"
+          >
+            Don’t have an account?
+            <span
+              class="text-indigo-600 font-medium cursor-pointer hover:underline"
+              (click)="goToSignup()"
+            >
+              Sign Up
+            </span>
+          </p>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

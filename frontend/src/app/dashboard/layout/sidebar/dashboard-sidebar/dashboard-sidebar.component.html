@@ -1,0 +1,58 @@
+<aside class="w-[250px] bg-white shadow-xl border-r flex flex-col min-h-screen">
+
+  <!-- PROFILE -->
+  <div class="flex items-center gap-4 px-6 py-6 border-b">
+    <img src="assets\icons\user.png" class="w-10 h-10" />
+    <div>
+      <p class="font-semibold text-gray-800 text-lg">{{ userName || 'User' }}</p>
+    </div>
+  </div>
+
+  <nav class="flex-1 px-4 py-4 space-y-2">
+
+    <!-- Dashboard -->
+    <a routerLink="/dashboard/portfolio" routerLinkActive="active-item"
+       class="sidebar-item">
+      <img src="assets/icons/dashboard.png" class="w-auto h-8" />
+      <span>Dashboard</span>
+    </a>
+
+    <!-- Assets/Liabilities -->
+    <a routerLink="/dashboard/assets-liabilities" routerLinkActive="active-item"
+       class="sidebar-item">
+      <img src="assets\icons\liability.png" class="w-auto h-8" />
+      <span>Add Assets / Liabilities</span>
+    </a>
+
+    <!-- Invest -->
+    <a routerLink="/dashboard/investments" routerLinkActive="active-item"
+       class="sidebar-item">
+      <img src="assets\icons\invest.png" class="w-auto h-8" />
+      <span>Invest Now</span>
+    </a>
+
+    <!-- Analysis -->
+    <a routerLink="/dashboard/analysis" routerLinkActive="active-item"
+       class="sidebar-item">
+      <img src="assets\icons\analysis.png" class="w-auto h-8" />
+      <span>Analysis</span>
+    </a>
+
+    <!-- Reports -->
+    <a routerLink="/dashboard/reports" routerLinkActive="active-item"
+       class="sidebar-item">
+      <img src="assets\icons\reports.png" class="w-auto h-8" />
+      <span>Reports</span>
+    </a>
+
+  </nav>
+
+  <!-- Logout -->
+  <div class="px-6 py-6 border-t">
+    <button (click)="logout()" class="flex items-center gap-3 text-red-500 hover:text-red-700">
+      <img src="assets\icons\logout.png" class="w-6 h-6" />
+      <span class="font-semibold text-lg">Logout</span>
+    </button>
+  </div>
+
+</aside>

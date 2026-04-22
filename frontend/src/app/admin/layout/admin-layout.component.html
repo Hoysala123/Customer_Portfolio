@@ -1,0 +1,63 @@
+<div class="flex h-screen bg-gray-100">
+
+  <!-- SIDEBAR -->
+  <aside class="w-64 bg-white border-r flex flex-col">
+
+    <div class="px-6 py-4 border-b flex items-center gap-2">
+      <img src="assets/finvista-logo.png" class="h-12 w-auto" />
+      <span class="font-semibold text-green-600 text-2xl">FinVista</span>
+    </div>
+
+    <!-- Admin Info -->
+    <div class="flex items-center gap-3 px-6 py-4">
+      <img
+        src="assets\icons\user.png"
+        alt="Admin profile"
+        class="h-10 w-10 "
+      />
+      <div>
+        <p class="text-sm font-medium">{{ adminName }}</p>
+      </div>
+    </div>
+
+    <!-- NAVIGATION -->
+    <nav class="flex-1 px-4 space-y-1 text-sm">
+      <a routerLink="/admin-dashboard" routerLinkActive="active-item" class="sidebar-item">
+        <img src="assets/icons/dashboard.png" class="w-auto h-5" />
+        Dashboard
+      </a>
+      <a routerLink="/admin/customers" routerLinkActive="active-item" class="sidebar-item">
+        <img src="assets/icons/customeradvisor.png" class="w-auto h-5" />
+        Customers
+      </a>
+      <a routerLink="/admin/advisors" routerLinkActive="active-item" class="sidebar-item">
+        <img src="assets/icons/customeradvisor.png" class="w-auto h-5" />
+        Advisors
+      </a>
+      <a routerLink="/admin/notification" routerLinkActive="active-item" class="sidebar-item">
+        <img src="assets/icons/notify.png" class="w-auto h-5" />
+        Notifications
+      </a>
+      <a routerLink="/admin/investment-products" routerLinkActive="active-item" class="sidebar-item">
+        <img src="assets/icons/invest.png" class="w-auto h-5" />
+        Investment Products
+      </a>
+    </nav>
+
+    <!-- LOGOUT BUTTON -->
+    <button
+      (click)="logout()"
+      class="flex items-center gap-3 text-red-500 hover:text-red-700 cursor-pointer px-6 py-4"
+    >
+      <img src="assets/icons/logout.png" class="w-6 h-6" />
+      <span class="font-semibold text-lg">Logout</span>
+    </button>
+
+  </aside>
+
+  <!-- CONTENT -->
+  <main class="flex-1 overflow-y-auto">
+    <ng-content></ng-content>
+  </main>
+
+</div>

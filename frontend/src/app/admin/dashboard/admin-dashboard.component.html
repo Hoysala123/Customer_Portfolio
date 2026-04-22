@@ -1,0 +1,167 @@
+
+<app-admin-layout>
+
+  <!-- HEADER -->
+  <div class="flex justify-between items-center px-8 py-6">
+    <h1 class="text-xl font-semibold">Dashboard</h1>
+
+    <div class="flex items-center gap-4">
+      <select
+        [(ngModel)]="selectedAdvisorId"
+        (ngModelChange)="onAdvisorChange()"
+        class="px-3 py-2 border border-gray-300 rounded-md text-sm"
+      >
+        <!-- ✅ UPDATED -->
+        <option value="">All Advisors</option>
+
+        <option *ngFor="let advisor of advisors" [value]="advisor.id">
+          {{ advisor.name }}
+        </option>
+      </select>
+
+      <button class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm">
+        + Add Advisors
+      </button>
+    </div>
+  </div>
+
+
+  <!-- STATS -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6 px-8">
+    <!-- TOTAL USERS -->
+    <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 flex items-center gap-4">
+      <img src="assets\icons\group.png" class="h-10 w-auto rounded-full object-cover bg-Black-200" />
+      <div>
+        <p class="text-gray-600 text-sm font-medium">Total Users</p>
+        <h2 class="text-xl font-bold text-gray-900">{{ summary?.totalUsers ?? '—' }}</h2>
+      </div>
+    </div>
+
+    <!-- TOTAL CUSTOMERS -->
+    <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 flex items-center gap-4">
+      <img src="assets\icons\group.png" class="h-10 w-auto rounded-full object-cover bg-Black-200" />
+      <div>
+        <p class="text-gray-600 text-sm font-medium">Total Customers</p>
+        <h2 class="text-xl font-bold text-gray-900">{{ summary?.totalCustomers ?? '—' }}</h2>
+      </div>
+    </div>
+
+    <!-- TOTAL ASSETS -->
+    <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 flex items-center gap-4">
+      <img src="assets\icons\asset.png" class="h-10 w-auto rounded-full object-cover bg-Black-200" />
+      <div>
+        <p class="text-gray-600 text-sm font-medium">Total Assets</p>
+        <h2 class="text-xl font-bold text-gray-900">{{ summary?.totalAssets ?? '—' }}</h2>
+      </div>
+    </div>
+
+    <!-- ACTIVE ALERTS -->
+    <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 flex items-center gap-4">
+      <img src="assets\icons\notification.png" class="w-auto h-7" />
+      <div>
+        <p class="text-gray-600 text-sm font-medium">Active Alerts</p>
+        <h2 class="text-xl font-bold text-gray-900">{{ summary?.activeAlerts ?? '—' }}</h2>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 px-8 mt-8">
+    <!-- Portfolio Performance -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <h3 class="font-medium mb-4">Portfolio Performance</h3>
+      <div class="h-[220px]">
+        <canvas baseChart [data]="barChartData" [options]="barChartOptions" type="bar"></canvas>
+      </div>
+    </div>
+
+    <!-- Asset Allocation -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <h3 class="font-medium mb-4">Asset Allocation</h3>
+      <div class="h-[220px]">
+        <canvas baseChart [data]="pieChartData" [options]="pieChartOptions" type="pie"></canvas>
+      </div>
+      <!-- LEGEND -->
+      <div class="flex justify-center gap-6 text-xs text-gray-500 mt-4">
+        <div class="flex items-center gap-1">
+          <span class="w-3 h-3 bg-blue-400 rounded-full"></span> Bonds
+        </div>
+        <div class="flex items-center gap-1">
+          <span class="w-3 h-3 bg-green-400 rounded-full"></span> Fixed Deposits
+        </div>
+        <div class="flex items-center gap-1">
+          <span class="w-3 h-3 bg-orange-400 rounded-full"></span> Loans
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CUSTOMER REPORTS -->
+  <div class="bg-white rounded-xl shadow-sm p-6 px-8 mt-8 mx-8">
+    <h3 class="font-medium mb-4">Customer Reports</h3>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-gray-500 border-b">
+            <th class="text-left py-2">Customer</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Advisor</th>
+            <th>KYC</th>
+            <th>Risk</th>
+            <th class="text-right">Assets</th>
+            <th class="text-right">Liabilities</th>
+            <th class="text-right">Net Worth</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let report of customerReports" class="border-b hover:bg-gray-50">
+            <td class="py-2 font-medium">{{ report.name }}</td>
+            <td>{{ report.email }}</td>
+            <td>{{ report.phone }}</td>
+            <td>{{ report.advisor }}</td>
+            <td>{{ report.kycStatus }}</td>
+            <td>{{ report.risk }}</td>
+            <td class="text-right">{{ report.totalAssets | number:'1.0-0' }}</td>
+            <td class="text-right">{{ report.totalLiabilities | number:'1.0-0' }}</td>
+            <td class="text-right">{{ report.netWorth | number:'1.0-0' }}</td>
+          </tr>
+          <tr *ngIf="!customerReports || customerReports.length === 0">
+            <td colspan="9" class="text-center text-gray-400 py-6">No customer report data available.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- AUDIT LOGS -->
+  <div class="bg-white rounded-xl shadow-sm p-6 px-8 mt-8 mx-8 mb-10">
+    <h3 class="font-medium mb-4">Audit Logs</h3>
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="text-gray-500 border-b">
+          <th class="text-left py-2">Name</th>
+          <th>Role</th>
+          <th>Action</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let log of auditLogs" class="border-b">
+          <td class="py-2">{{ log.name || log.Name || 'Unknown' }}</td>
+          <td>{{ log.role || log.Role }}</td>
+          <td>{{ log.action || log.Action }}</td>
+          <td>
+            <span class="px-2 py-1 rounded text-xs" [class.bg-green-100]="(log.status || log.Status) === 'Success'" [class.bg-red-100]="(log.status || log.Status) === 'Failed'">
+              {{ log.status || log.Status }}
+            </span>
+          </td>
+        </tr>
+        <tr *ngIf="auditLogs?.length === 0">
+          <td colspan="4" class="text-center py-6 text-gray-400">No logs available</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</app-admin-layout>

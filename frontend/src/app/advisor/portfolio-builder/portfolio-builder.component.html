@@ -1,0 +1,101 @@
+<app-advisor-layout>
+  <div class="px-8 py-6">
+
+    <!-- Page Title -->
+    <h1 class="text-xl font-semibold mb-6">
+      Portfolio Builder - {{ customer.name || 'Loading...' }}
+    </h1>
+
+    <ng-container *ngIf="!loading; else loadingTpl">
+
+      <!-- Customer Summary -->
+      <div class="bg-white border rounded-lg p-4 mb-6">
+        <h2 class="font-semibold mb-4">Customer Summary</h2>
+
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <p class="text-gray-500 text-sm">Name</p>
+            <p class="font-medium">{{ customer.name }}</p>
+          </div>
+
+          <div>
+            <p class="text-gray-500 text-sm">Email</p>
+            <p class="font-medium">{{ customer.email }}</p>
+          </div>
+
+          <div>
+            <p class="text-gray-500 text-sm">KYC Status</p>
+            <span class="px-3 py-1 rounded bg-green-100 text-green-700 text-sm">
+              {{ customer.kycStatus }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+    <!-- Assets & Liabilities -->
+    <div class="bg-white border rounded-lg p-4 mb-6">
+      <h2 class="font-semibold mb-4">Customer Assets & Liabilities</h2>
+
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b">
+            <th class="py-2">Name</th>
+            <th class="py-2">Type</th>
+            <th class="py-2 text-right">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of assetsLiabilities" class="border-b">
+            <td class="py-2">{{ item.name }}</td>
+            <td class="py-2">{{ item.type }}</td>
+            <td class="py-2 text-right">
+              {{ item.amount | number }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Financial Summary -->
+    <div class="bg-white border rounded-lg p-4 mb-6">
+      <h2 class="font-semibold mb-4">Financial Summary</h2>
+
+      <div class="grid grid-cols-3 gap-4">
+        <div>
+          <p class="text-gray-500 text-sm">Total Assets</p>
+          <p class="font-medium">{{ totalAssets | number }}</p>
+        </div>
+
+        <!-- <div>
+          <p class="text-gray-500 text-sm">Total Liabilities</p>
+          <p class="font-medium">{{ totalLiabilities | number }}</p>
+        </div> -->
+
+        <div>
+          <p class="text-gray-500 text-sm">Net Worth</p>
+          <p class="font-medium">{{ netWorth | number }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create Portfolio Button -->
+    <div class="text-right">
+      <button
+        class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+        [disabled]="customer.portfolioCreated"
+        (click)="createPortfolio()"
+      >
+        {{ customer.portfolioCreated ? 'Portfolio Created' : 'Create Portfolio' }}
+      </button>
+    </div>
+
+  </ng-container>
+
+  <ng-template #loadingTpl>
+    <div class="bg-white rounded-xl shadow-sm p-6 px-8 mt-8 mx-8 text-center">
+      Loading customer details...
+    </div>
+  </ng-template>
+
+  </div>
+</app-advisor-layout>

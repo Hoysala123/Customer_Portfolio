@@ -1,0 +1,77 @@
+<div class="w-full">
+
+  <!-- PAGE TITLE -->
+  <h1 class="text-2xl font-semibold mb-8 text-gray-800">
+    {{ investmentType }} Investment
+  </h1>
+
+  <!-- PREMIUM FORM CARD -->
+  <div class="bg-white w-[520px] p-8 rounded-2xl shadow-xl">
+
+    <!-- HEADER WITH ICON + TITLE -->
+    <div class="flex items-center gap-4 mb-6">
+
+      <!-- <div class="w-12 h-12 bg-[#3B82F6]/20 rounded-xl flex items-center justify-center">
+        assets/icons/invest.png
+      </div> -->
+
+      <h2 class="text-xl font-semibold text-gray-800">
+        Enter Investment Details
+      </h2>
+
+    </div>
+
+    <!-- FORM FIELDS -->
+    <div class="space-y-5">
+
+      <!-- Investment Amount -->
+      <div>
+        <label class="block text-gray-700 font-medium mb-1">Investment Amount</label>
+        <input
+          [(ngModel)]="formData.amount"
+          (ngModelChange)="onAmountChange()"
+          type="number"
+          [min]="getMinAmount()"
+          placeholder="Enter amount"
+          class="input-premium"
+        />
+        <div class="text-xs text-gray-500 mt-1">
+          Minimum: ₹{{ getMinAmount() }}
+        </div>
+      </div>
+
+      <!-- Investment Date -->
+      <div>
+        <label class="block text-gray-700 font-medium mb-1">Investment Date</label>
+        <input
+          [(ngModel)]="formData.date"
+          type="date"
+          class="input-premium"
+          [readonly]="true"
+        />
+      </div>
+
+      <!-- Sum Assured -->
+      <div>
+        <label class="block text-gray-700 font-medium mb-1">Sum Assured (Total Return)</label>
+        <input
+          [(ngModel)]="formData.sumAssured"
+          type="number"
+          class="input-premium bg-gray-100"
+          readonly
+        />
+      </div>
+
+    </div>
+
+    <!-- SUBMIT BUTTON -->
+    <button
+      (click)="submitForm()"
+      class="w-full mt-8 py-3 bg-gradient-to-r from-indigo-500 to-blue-600
+             text-white rounded-xl font-semibold shadow-md hover:opacity-90">
+      Submit
+    </button>
+
+  </div>
+
+</div>

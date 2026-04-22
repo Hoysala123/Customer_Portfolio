@@ -1,0 +1,126 @@
+<app-admin-layout>
+
+  <!-- HEADER -->
+  <div class="flex justify-between items-center px-8 py-6">
+    <h1 class="text-xl font-semibold">Customer Management</h1>
+  </div>
+
+  <!-- CARD -->
+  <div class="bg-white rounded-xl shadow-sm mx-8 p-6">
+
+    <!-- TOP BAR -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+      <h2 class="font-medium text-lg">All Customers</h2>
+
+      <div class="flex flex-col md:flex-row gap-3">
+
+        <!-- Search (UI only) -->
+        <!-- <div class="relative">
+          <input
+            type="text"
+            placeholder="Search"
+            class="border rounded-md pl-9 pr-3 py-2 text-sm w-56 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          />
+          <span class="absolute left-3 top-2.5 text-gray-400 text-sm">🔍</span>
+        </div> -->
+
+        <!-- Advisor Filter -->
+        <div class="flex items-center gap-2">
+          <label class="text-sm text-gray-600">Advisor</label>
+          <select
+            [(ngModel)]="selectedAdvisorId"
+            (ngModelChange)="onAdvisorChange()"
+            class="border rounded-md px-3 py-2 text-sm"
+          >
+            <option value="">All Advisors</option>
+            <option *ngFor="let advisor of advisors" [value]="advisor.id">
+              {{ advisor.name }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="text-gray-500 border-b">
+          <tr>
+            <th class="text-left py-3">Name</th>
+            <th>Username</th>
+            <th>Phone Number</th>
+            <th>Email</th>
+            <th>Allocated Advisor</th>
+            <th>KYC Status</th>
+            <th>Risk</th>
+            <th class="text-center">Report</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr
+            *ngFor="let customer of customers"
+            class="border-b hover:bg-gray-50"
+          >
+            <td class="py-3">{{ customer.name }}</td>
+            <td>{{ customer.username }}</td>
+            <td>{{ customer.phone }}</td>
+            <td>{{ customer.email }}</td>
+            <td>{{ getAdvisorName(customer) }}</td>
+
+            <td>
+              <span
+                class="px-3 py-1 rounded-full text-xs font-medium"
+                [class.bg-green-100]="customer.kycStatus === 'Approved'"
+                [class.text-green-700]="customer.kycStatus === 'Approved'"
+                [class.bg-yellow-100]="customer.kycStatus === 'Pending'"
+                [class.text-yellow-700]="customer.kycStatus === 'Pending'"
+              >
+                {{ customer.kycStatus }}
+              </span>
+            </td>
+
+            <td>
+              <span
+                class="px-3 py-1 rounded-full text-xs font-medium"
+                [class.bg-red-500]="customer.risk === 'High'"
+                [class.text-white]="customer.risk === 'High'"
+                [class.bg-yellow-100]="customer.risk === 'Medium'"
+                [class.text-yellow-700]="customer.risk === 'Medium'"
+                [class.bg-green-100]="customer.risk === 'Low'"
+                [class.text-green-700]="customer.risk === 'Low'"
+              >
+                {{ customer.risk }}
+              </span>
+            </td>
+
+            <td class="text-center">
+              <button
+                class="bg-blue-600 text-white rounded-md px-3 py-1 text-xs"
+                (click)="downloadReport(customer.id)"
+              >
+                Download
+              </button>
+            </td>
+          </tr>
+
+          <!-- Empty State -->
+          <tr *ngIf="customers.length === 0">
+            <td colspan="8" class="text-center py-6 text-gray-500">
+              No customers found
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="flex justify-between items-center text-xs text-gray-500 mt-4">
+      <p>
+        Showing {{ customers.length ? 1 : 0 }} to
+        {{ customers.length }} of {{ allCustomers.length }} entries
+      </p>
+    </div>
+
+  </div>
+</app-admin-layout>

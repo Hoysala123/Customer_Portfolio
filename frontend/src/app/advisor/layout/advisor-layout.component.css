@@ -1,0 +1,7 @@
+.nav-item {
+  @apply block px-3 py-2 rounded-md text-gray-600 hover:bg-green-50 hover:text-green-600 cursor-pointer;
+}
+
+.nav-item.active {
+  @apply bg-green-100 text-green-600 font-medium;
+}

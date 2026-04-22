@@ -1,0 +1,39 @@
+<header class="w-full bg-white border-b px-6 py-3 flex items-center justify-between shadow-sm">
+
+  <div class="flex items-center gap-3">
+    <img src="assets/finvista-logo.png" class="w-8 h-8" />
+    <span class="text-xl font-semibold text-green-600">FinVista</span>
+
+    <span class="ml-6 text-lg font-medium text-gray-700">
+      {{ pageTitle }}
+    </span>
+  </div>
+
+  <div class="relative flex items-center gap-5">
+    <button
+      (click)="checkKycStatus()"
+      class="px-6 py-2 bg-[#efe7ff] text-gray-700 rounded-full text-sm font-medium shadow-sm">
+      KYC Status
+    </button>
+
+    <button class="relative" (click)="toggleNotifications()">
+      <img src="assets\icons\notification.png" class="w-auto h-8" />
+      <span *ngIf="notifications.length > 0" class="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center">{{ notifications.length }}</span>
+    </button>
+
+    <div *ngIf="notificationsOpen" class="absolute right-0 mt-14 w-80 bg-white border border-gray-200 rounded-xl shadow-lg p-4 z-20">
+      <h3 class="font-semibold mb-3">Notifications</h3>
+      <div *ngIf="notifications.length === 0" class="text-gray-500 text-sm">
+        No notifications yet.
+      </div>
+      <div class="max-h-64 overflow-y-auto">
+        <div *ngFor="let note of notifications" class="mb-3 p-3 rounded-lg bg-gray-50 border border-gray-200 text-sm">
+          <div class="font-medium">{{ note.action || note.Action }}</div>
+          <div class="text-gray-500">{{ note.status || note.Status }}</div>
+          <div class="text-gray-400 text-xs mt-1">{{ note.timestamp }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</header>

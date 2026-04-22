@@ -1,0 +1,64 @@
+<div class="min-h-screen bg-gray-100 flex justify-center items-center p-6">
+  <div class="w-full max-w-md bg-white rounded-xl shadow-xl p-8">
+
+    <h2 class="text-2xl font-semibold text-center mb-4">Create Your Account</h2>
+
+    <label class="text-sm font-medium">Full Name</label>
+    <input 
+      [(ngModel)]="form.name"
+      type="text"
+      placeholder="Enter full name"
+      class="w-full border rounded-md px-4 py-2 mt-1 mb-4 focus:ring-2 focus:ring-blue-400"
+    />
+
+    <label class="text-sm font-medium">Username</label>
+    <input 
+      [(ngModel)]="form.username"
+      type="text"
+      placeholder="Choose a username"
+      class="w-full border rounded-md px-4 py-2 mt-1 mb-4 focus:ring-2 focus:ring-blue-400"
+    />
+
+    <label class="text-sm font-medium">Phone Number</label>
+    <input 
+      [(ngModel)]="form.phone"
+      type="text"
+      placeholder="Enter phone number"
+      class="w-full border rounded-md px-4 py-2 mt-1 mb-4 focus:ring-2 focus:ring-blue-400"
+    />
+
+    <label class="text-sm font-medium">Email</label>
+    <input 
+      [(ngModel)]="form.email"
+      type="email"
+      placeholder="you@example.com"
+      class="w-full border rounded-md px-4 py-2 mt-1 mb-4 focus:ring-2 focus:ring-blue-400"
+    />
+
+    <label class="text-sm font-medium">Password</label>
+    <input 
+      [(ngModel)]="form.password"
+      type="password"
+      placeholder="********"
+      class="w-full border rounded-md px-4 py-2 mt-1 mb-6 focus:ring-2 focus:ring-blue-400"
+    />
+
+    <button 
+      (click)="register()"
+      class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition"
+      [disabled]="loading">
+      <span *ngIf="!loading">Sign Up</span>
+      <span *ngIf="loading">Creating Account...</span>
+    </button>
+
+    <p class="text-sm text-center mt-4">
+      Already have an account?
+      <span
+        (click)="goToLogin()"
+        class="text-blue-600 cursor-pointer hover:underline">
+        Login
+      </span>
+    </p>
+
+  </div>
+</div>

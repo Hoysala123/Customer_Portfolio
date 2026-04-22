@@ -1,0 +1,59 @@
+<div class="w-full">
+
+  <!-- PAGE TITLE -->
+  <h1 class="text-2xl font-semibold mb-8 text-gray-800">Reports</h1>
+
+  <!-- PREMIUM TABLE CARD -->
+  <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+
+    <table class="w-full text-left border-collapse">
+
+      <!-- TABLE HEADER -->
+      <thead>
+        <tr class="text-gray-600 text-sm border-b">
+          <th class="pb-3">SL.No</th>
+          <th class="pb-3">Assets / Liabilities</th>
+          <th class="pb-3">Purchase Date</th>
+          <th class="pb-3">Due Date</th>
+          <th class="pb-3">Interest</th>
+          <th class="pb-3">Amount</th>
+          <th class="pb-3">Sum</th>
+        </tr>
+      </thead>
+
+      <!-- TABLE ROWS -->
+      <tbody>
+        <tr *ngFor="let row of tableData; let i = index"
+            class="border-b text-gray-700 text-sm">
+
+          <td class="py-3">{{ i + 1 }}</td>
+          <td>{{ row.name }}</td>
+          <td>{{ row.purchaseDate }}</td>
+          <td>{{ row.dueDate }}</td>
+          <td>{{ row.interest }}</td>
+          <td>{{ row.amount | number }}</td>
+          <td>{{ row.sum | number }}</td>
+
+        </tr>
+      </tbody>
+
+    </table>
+
+    <!-- NET WORTH -->
+    <div class="text-right text-lg font-bold mt-6 text-gray-800">
+      Net Worth: {{ netWorth | number }}
+    </div>
+
+  </div>
+
+  <!-- DOWNLOAD BUTTON -->
+  <div class="flex justify-end">
+    <button
+      (click)="downloadStatement()"
+      class="px-6 py-3 bg-gradient-to-r from-indigo-500 to-blue-600
+             text-white font-medium rounded-xl shadow-md hover:opacity-90">
+      Download Statements
+    </button>
+  </div>
+
+</div>

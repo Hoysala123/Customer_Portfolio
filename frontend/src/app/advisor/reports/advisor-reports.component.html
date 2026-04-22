@@ -1,0 +1,105 @@
+<app-advisor-layout>
+
+  <!-- HEADER -->
+  <div class="px-8 py-6">
+    <h1 class="text-xl font-semibold">Reports</h1>
+  </div>
+
+  <!-- TOP GRID: Portfolio Performance and Overall Analysis side-by-side -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 px-8">
+
+    <!-- PORTFOLIO PERFORMANCE -->
+    <div class="bg-white rounded-xl shadow-sm p-6 h-full flex flex-col">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-medium">Portfolio Performance (Monthly)</h3>
+        <!-- <span class="text-xs text-gray-500">Grouped by purchase date</span> -->
+      </div>
+
+      <div class="flex-1">
+        <div class="h-[140px] lg:h-[180px]">
+          <canvas
+            baseChart
+            [data]="barChartData"
+            [options]="barChartOptions"
+            type="bar">
+          </canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- OVERALL ANALYSIS -->
+    <div class="bg-white rounded-xl shadow-sm p-6 h-full flex flex-col">
+      <div class="mb-4">
+        <h3 class="font-medium">Overall Analysis</h3>
+      </div>
+
+      <div class="flex-1">
+        <div class="h-[140px] lg:h-[180px]">
+          <canvas
+            baseChart
+            [data]="pieChartData"
+            [options]="pieChartOptions"
+            type="pie">
+          </canvas>
+        </div>
+      </div>
+
+      <!-- LEGEND -->
+      <div class="flex justify-center gap-6 text-xs text-gray-500 mt-4">
+        <div class="flex items-center gap-1">
+          <span class="w-3 h-3 bg-blue-400 rounded-full"></span> Bonds
+        </div>
+        <div class="flex items-center gap-1">
+          <span class="w-3 h-3 bg-green-400 rounded-full"></span> Fixed Deposit
+        </div>
+        <div class="flex items-center gap-1">
+          <span class="w-3 h-3 bg-orange-400 rounded-full"></span> Loans
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CUSTOMER SUMMARY TABLE -->
+  <div class="bg-white rounded-xl shadow-sm p-6 mt-8 mx-8 mb-10 overflow-x-auto">
+
+    <table class="w-full text-sm">
+      <thead class="text-gray-500 border-b">
+        <tr>
+          <th class="text-left py-3">S.No</th>
+          <th>Name</th>
+          <th>Assets</th>
+          <th>Liabilities</th>
+          <th>Risk</th>
+          <th>Report</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let customer of customerReports; let i = index"
+            class="border-b hover:bg-gray-50">
+          <td class="py-3">{{ i + 1 }}</td>
+          <td class="font-medium">{{ customer.name }}</td>
+          <td>{{ customer.assets }}</td>
+          <td>{{ customer.liabilities }}</td>
+          <td>{{ customer.risk }}</td>
+          <td class="text-center">
+            <button
+              class="text-blue-600 hover:text-blue-800"
+              (click)="downloadCustomerReport(customer.id, customer.name)">
+              Download
+            </button>
+          </td>
+        </tr>
+
+        <tr *ngIf="customerReports.length === 0">
+          <td colspan="6" class="text-center text-gray-400 py-10">
+            No reports available
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+
+</app-advisor-layout>

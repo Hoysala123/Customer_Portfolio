@@ -1,0 +1,18 @@
+<!-- TOP HEADER -->
+<app-dashboard-header></app-dashboard-header>
+
+<!-- MAIN WRAPPER -->
+<div class="flex min-h-screen bg-[#f5f6f8]">
+
+  <!-- LEFT SIDEBAR -->
+  <app-dashboard-sidebar [userName]="userName"></app-dashboard-sidebar>
+
+  <!-- MAIN CONTENT AREA -->
+  <main class="flex-1 px-8 py-6 overflow-y-auto">
+
+    <!-- PLACE WHERE PORTFOLIO / ANALYSIS / REPORTS LOAD -->
+    <router-outlet></router-outlet>
+
+  </main>
+
+</div>
