@@ -14,7 +14,7 @@ import { AdminApiService } from '../api/admin-api.service';
 })
 export class AdminDashboardComponent implements OnInit {
 
-  // ✅ Correct default
+  // Correct default
   selectedAdvisorId: string = '';
 
   advisors: { id: string; name: string }[] = [];
@@ -90,14 +90,14 @@ export class AdminDashboardComponent implements OnInit {
     });
   }
 
-  // ✅ FIXED: no arguments passed
+  // FIXED: no arguments passed
   loadDashboardSummary(): void {
     this.adminApi.getDashboardSummary().subscribe({
       next: data => this.summary = data
     });
   }
 
-  // ✅ FIXED: no arguments passed
+  // FIXED: no arguments passed
   loadCustomerReports(): void {
     this.adminApi.getCustomerReports().subscribe({
       next: data => this.customerReports = data
@@ -110,7 +110,7 @@ export class AdminDashboardComponent implements OnInit {
     });
   }
 
-  // ✅ These APIs ALREADY accept advisorId → leave untouched
+  // These APIs ALREADY accept advisorId → leave untouched
   loadPortfolioPerformance(): void {
     this.adminApi
       .getPortfolioPerformance(this.selectedAdvisorId)
@@ -156,7 +156,6 @@ export class AdminDashboardComponent implements OnInit {
     };
   }
 
-  // ✅ Safe reload
   onAdvisorChange(): void {
     this.loadPortfolioPerformance();
     this.loadAssetAllocation();

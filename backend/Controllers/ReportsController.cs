@@ -65,12 +65,12 @@ namespace backend.Controllers
                     dueDate = l.DueDate.ToString("yyyy-MM-dd"),
                     interest = l.Interest,
                     amount = l.Amount,
-                    sum = l.Amount * l.Interest
+                    sum = l.Amount * (l.Interest / 100m);
                 });
             }
 
             var netWorth = assets.Sum(a => CalculateAssetSum(a))
-                          - loans.Sum(l => l.Amount * l.Interest);
+                          - loans.Sum(l => l.Amount * (l.Interest / 100m));
 
             return Ok(new
             {

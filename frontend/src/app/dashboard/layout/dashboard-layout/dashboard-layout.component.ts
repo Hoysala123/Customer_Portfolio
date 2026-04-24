@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, RouterModule } from '@angular/router';
 
 import { DashboardHeaderComponent } from '../header/dashboard-header/dashboard-header.component';
 import { DashboardSidebarComponent } from '../sidebar/dashboard-sidebar/dashboard-sidebar.component';
+import { FooterComponent } from '../../../footer/footer.component';
 import { AuthService } from '../../../services/auth.service';   
 import { Router } from '@angular/router';                      
 
@@ -13,8 +14,10 @@ import { Router } from '@angular/router';
   imports: [
     CommonModule,
     RouterOutlet,
+    RouterModule,
     DashboardHeaderComponent,
-    DashboardSidebarComponent
+    // DashboardSidebarComponent,
+    // FooterComponent
   ],
   templateUrl: './dashboard-layout.component.html'
 })
@@ -43,5 +46,13 @@ export class DashboardLayoutComponent implements OnInit {
         }
       });
     }
+    }
+
+    logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('role');
+      localStorage.removeItem('id');
+      localStorage.removeItem('kycStatus');
+      this.router.navigate(['/login']);
   }
 }

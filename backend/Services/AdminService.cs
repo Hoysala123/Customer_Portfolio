@@ -93,7 +93,7 @@ namespace backend.Services
                         .Sum(a => (decimal?)a.Amount) ?? 0,
                     TotalLiabilities = db.Loans
                         .Where(l => l.CustomerId == c.Id)
-                        .Sum(l => (decimal?)(l.Amount * l.Interest)) ?? 0
+                        .Sum(l => (decimal?)(l.Amount * (l.Interest / 100m))) ?? 0
                 })
                 .ToListAsync();
 

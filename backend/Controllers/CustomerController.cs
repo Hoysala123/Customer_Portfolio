@@ -17,7 +17,7 @@ namespace backend.Controllers
             this.db = db;
         }
 
-        // ⭐ UPDATED (but structure unchanged)
+        // UPDATED (but structure unchanged)
         [HttpGet("{id}")]
         public IActionResult GetCustomer(Guid id)
         {
