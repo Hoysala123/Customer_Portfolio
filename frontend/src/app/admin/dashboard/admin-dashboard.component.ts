@@ -14,7 +14,7 @@ import { AdminApiService } from '../api/admin-api.service';
 })
 export class AdminDashboardComponent implements OnInit {
 
-  // ✅ Correct default
+  // Correct default
   selectedAdvisorId: string = '';
 
   advisors: { id: string; name: string }[] = [];
@@ -90,18 +90,47 @@ export class AdminDashboardComponent implements OnInit {
     });
   }
 
-  // ✅ FIXED: no arguments passed
+  //FIXED: no arguments passed
   loadDashboardSummary(): void {
+    console.log('Loading dashboard summary...');
     this.adminApi.getDashboardSummary().subscribe({
-      next: data => this.summary = data
+      next: data => {
+        console.log('Dashboard summary data received:', data);
+        this.summary = data;
+      },
+      error: err => console.error('Error loading dashboard summary:', err)
     });
   }
 
-  // ✅ FIXED: no arguments passed
+  //FIXED: no arguments passed
   loadCustomerReports(): void {
+    console.log('Loading customer reports...');
     this.adminApi.getCustomerReports().subscribe({
-      next: data => this.customerReports = data
+      next: data => {
+        console.log('Customer reports data received:', data);
+        this.customerReports = Array.isArray(data) ? this.normalizeCustomerReports(data) : [];
+        console.log('Normalized customer reports:', this.customerReports);
+      },
+      error: err => {
+        console.error('Error loading customer reports:', err);
+        this.customerReports = [];
+      }
     });
+  }
+
+  private normalizeCustomerReports(data: any[]): any[] {
+    return data.map(report => ({
+      id: report.id || report.Id,
+      name: report.name || report.Name || '',
+      email: report.email || report.Email || '',
+      phone: report.phone || report.Phone || '',
+      advisor: report.advisor || report.Advisor || '',
+      kycStatus: report.kycStatus || report.KycStatus || '',
+      risk: report.risk || report.Risk || '',
+      totalAssets: report.totalAssets ?? report.TotalAssets ?? 0,
+      totalLiabilities: report.totalLiabilities ?? report.TotalLiabilities ?? 0,
+      netWorth: report.netWorth ?? report.NetWorth ?? 0
+    }));
   }
 
   loadAuditLogs(): void {
@@ -110,7 +139,7 @@ export class AdminDashboardComponent implements OnInit {
     });
   }
 
-  // ✅ These APIs ALREADY accept advisorId → leave untouched
+  //These APIs ALREADY accept advisorId → leave untouched
   loadPortfolioPerformance(): void {
     this.adminApi
       .getPortfolioPerformance(this.selectedAdvisorId)
@@ -156,7 +185,7 @@ export class AdminDashboardComponent implements OnInit {
     };
   }
 
-  // ✅ Safe reload
+  //Safe reload
   onAdvisorChange(): void {
     this.loadPortfolioPerformance();
     this.loadAssetAllocation();

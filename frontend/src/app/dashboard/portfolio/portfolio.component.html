@@ -1,142 +1,104 @@
-<div class="w-full">
-
+<div class="w-full ">
   <!-- PAGE TITLE -->
-  <h1 class="text-2xl font-semibold mb-6 text-gray-800">Portfolio</h1>
-
-  <!-- TOP SUMMARY CARDS -->
-  <div class="grid grid-cols-3 gap-6 mb-8">
-
-    <!-- TOTAL INVESTMENT -->
-    <div class="bg-white text-black p-8 rounded-2xl shadow-lg flex items-center gap-5">
-      
-        <img src="assets\icons\investment.png" class="w-auto h-10" />
-      
-      <div>
-        <p class="text-sm opacity-90">Total Investment</p>
-        <p class="text-2xl font-bold">{{ summary.totalInvestment | number }}</p>
-      </div>
-    </div>
-
-    <!-- TOTAL RETURNS -->
-    <div class="bg-white text-black p-8 rounded-2xl shadow-lg flex items-center gap-5">
-      
-        <img src="assets\icons\returns.png" class="w-auto h-10" />
-      
-      <div>
-        <p class="text-sm opacity-90">Total Returns</p>
-        <p class="text-2xl font-bold">{{ summary.totalReturns | number }}</p>
-      </div>
-    </div>
-
-    <!-- RISK LEVEL -->
-    <div class="bg-white text-black p-8 rounded-2xl shadow-lg flex items-center gap-5">
-      
-        <img src="assets\icons\risk.png" class="w-auto h-10" />
-      
-      <div>
-        <p class="text-sm opacity-80">Risk Level</p>
-        <p class="text-lg font-bold">{{ summary.riskLevel }}</p>
-      </div>
-    </div>
-
+  <div class="flex justify-between items-center px-1 py-4">
+    <h1 class="text-xl font-semibold text-gray-800">Portfolio Dashboard</h1>
   </div>
-
+ 
+  <!-- SUMMARY CARDS (Modernized) -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 px-1 mb-8">
+    <!-- TOTAL INVESTMENT -->
+    <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6 flex items-center gap-4">
+      <img src="assets/icons/investment.png" class="h-10 w-auto rounded-full object-cover bg-gray-100" />
+      <div>
+        <p class="text-gray-600 text-sm font-medium">Total Investment</p>
+        <h2 class="text-xl font-bold text-gray-900">{{ summary.totalInvestment | number }}</h2>
+      </div>
+    </div>
+    <!-- TOTAL RETURNS -->
+    <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6 flex items-center gap-4">
+      <img src="assets/icons/returns.png" class="h-10 w-auto rounded-full object-cover bg-gray-100" />
+      <div>
+        <p class="text-gray-600 text-sm font-medium">Total Returns</p>
+        <h2 class="text-xl font-bold text-gray-900">{{ summary.totalReturns | number }}</h2>
+      </div>
+    </div>
+    <!-- RISK LEVEL -->
+    <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6 flex items-center gap-4">
+      <img src="assets/icons/risk.png" class="h-10 w-auto rounded-full object-cover bg-gray-100" />
+      <div>
+        <p class="text-gray-600 text-sm font-medium">Risk Level</p>
+        <h2 class="text-xl font-bold text-gray-900">{{ summary.riskLevel }}</h2>
+      </div>
+    </div>
+  </div>
+ 
   <!-- ASSETS TABLE -->
-  <div class="bg-white rounded-2xl shadow-xl p-6 mb-8">
+  <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
 
     <table class="w-full text-left border-collapse">
+
+      <!-- TABLE HEADER -->
       <thead>
-        <tr class="border-b text-gray-500 text-sm">
-          <th class="pb-2">SL.No</th>
-          <th class="pb-2">Assets / Liabilities</th>
-          <th class="pb-2">Purchase Date</th>
-          <th class="pb-2">Due Date</th>
-          <th class="pb-2">Interest</th>
-          <th class="pb-2">Amount</th>
-          <th class="pb-2">Sum</th>
+        <tr class="text-gray-600 text-sm border-b">
+          <th class="pb-3">SL.No</th>
+          <th class="pb-3">Assets / Liabilities</th>
+          <th class="pb-3">Purchase Date</th>
+          <th class="pb-3">Due Date</th>
+          <th class="pb-3">Interest</th>
+          <th class="pb-3">Amount</th>
+          <th class="pb-3">Sum</th>
         </tr>
       </thead>
 
+      <!-- TABLE ROWS -->
       <tbody>
-        <tr *ngFor="let item of tableData; let i = index"
-            class="border-b text-sm text-gray-700">
+        <tr *ngFor="let row of tableData; let i = index"
+            class="border-b text-gray-700 text-sm">
+
           <td class="py-3">{{ i + 1 }}</td>
-          <td>{{ item.name }}</td>
-          <td>
-            <ng-container *ngIf="item.purchaseDate; else issued">
-              {{ item.purchaseDate | date:'yyyy-MM-dd' }}
-            </ng-container>
-            <ng-template #issued>
-              <ng-container *ngIf="item.issuedDate; else noDate">
-                {{ item.issuedDate | date:'yyyy-MM-dd' }}
-              </ng-container>
-              <ng-template #noDate>-</ng-template>
-            </ng-template>
-          </td>
-          <td>
-            <ng-container *ngIf="item.dueDate; else noDue">
-              {{ item.dueDate | date:'yyyy-MM-dd' }}
-            </ng-container>
-            <ng-template #noDue>-</ng-template>
-          </td>
-          <td>{{ item.interest }}</td>
-          <td>{{ item.amount }}</td>
-          <td>{{ item.sum | number }}</td>
+          <td>{{ row.name }}</td>
+          <td>{{ row.purchaseDate }}</td>
+          <td>{{ row.dueDate }}</td>
+          <td>{{ row.interest }}</td>
+          <td>{{ row.amount | number }}</td>
+          <td>{{ row.sum | number }}</td>
+
         </tr>
       </tbody>
+
     </table>
 
     <!-- NET WORTH -->
-    <div class="text-right text-lg font-bold mt-4 text-gray-800">
+    <div class="text-right text-lg font-bold mt-6 text-gray-800">
       Net Worth: {{ netWorth | number }}
     </div>
 
   </div>
-
-  <!-- BOTTOM GRID: RISK + DEVICE ACTIVITY -->
-  <div class="grid grid-cols-2 gap-6">
-
+ 
+ 
+  <!-- BOTTOM GRID: RISK + NOTIFICATIONS -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 px-1s">
     <!-- RISK & COMPLIANCE -->
-    <div class="bg-white rounded-2xl shadow-xl p-6">
+    <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
       <h2 class="text-lg font-semibold mb-4 text-gray-800">Risk & Compliance</h2>
-
-      <div *ngIf="latestRiskAlert"
-           class="bg-red-100 border border-red-300 text-red-700 p-4 rounded-xl mb-4 shadow-sm">
+      <div *ngIf="latestRiskAlert" class="bg-red-100 border border-red-300 text-red-700 p-4 rounded-xl mb-4 shadow-sm">
         {{ latestRiskAlert }}
       </div>
     </div>
-
-    <!-- DEVICE ACTIVITY -->
-    <!-- DEVICE ACTIVITY -->
-<div class="bg-white rounded-2xl shadow-xl p-6">
-  <h2 class="text-lg font-semibold mb-4 text-gray-800">Notifications</h2>
-
-  <div *ngIf="!deviceActivity || deviceActivity.length === 0"
-       class="text-gray-400 text-sm">
-    No recent notifications.
-  </div>
-
-  <ng-container *ngFor="let activity of deviceActivity">
-    <div class="p-4 border-b text-gray-700 text-sm">
-
-      <div>
-        <b>Action:</b>
-        {{ activity.action || activity.Action || '-' }}
+    <!-- DEVICE ACTIVITY / NOTIFICATIONS -->
+    <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+      <h2 class="text-lg font-semibold mb-4 text-gray-800">Notifications</h2>
+      <div *ngIf="!deviceActivity || deviceActivity.length === 0" class="text-gray-400 text-sm">
+        No recent notifications.
       </div>
-
-      <div>
-        <b>Status:</b>
-        {{ activity.status || activity.Status || '-' }}
-      </div>
-
-      <div>
-        <b>Time:</b>
-        {{ activity.timestamp || activity.Timestamp || '-' }}
-      </div>
-
+      <ng-container *ngFor="let activity of deviceActivity">
+        <div class="p-4 border-b text-gray-700 text-sm">
+          <div><b>Action:</b> {{ activity.action || activity.Action || '-' }}</div>
+          <div><b>Status:</b> {{ activity.status || activity.Status || '-' }}</div>
+          <div><b>Time:</b> {{ activity.timestamp || activity.Timestamp || '-' }}</div>
+        </div>
+      </ng-container>
     </div>
-  </ng-container>
-</div>
   </div>
-
 </div>
+ 

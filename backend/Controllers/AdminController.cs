@@ -117,7 +117,8 @@ namespace backend.Controllers
 
             foreach (var loan in loans)
             {
-                var sum = loan.Amount * loan.Interest;
+                var timeInYears = (loan.DueDate - loan.IssuedDate).TotalDays / 365;
+                var sum = (loan.Amount * loan.Interest * (decimal)timeInYears) / 100;
                 csv += $"{loan.Name},{loan.IssuedDate:yyyy-MM-dd},{loan.DueDate:yyyy-MM-dd},{loan.Interest},{loan.Amount},{sum}\n";
             }
 

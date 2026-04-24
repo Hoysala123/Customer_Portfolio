@@ -1,18 +1,56 @@
-<!-- TOP HEADER -->
-<app-dashboard-header></app-dashboard-header>
-
-<!-- MAIN WRAPPER -->
-<div class="flex min-h-screen bg-[#f5f6f8]">
-
-  <!-- LEFT SIDEBAR -->
-  <app-dashboard-sidebar [userName]="userName"></app-dashboard-sidebar>
-
-  <!-- MAIN CONTENT AREA -->
-  <main class="flex-1 px-8 py-6 overflow-y-auto">
-
-    <!-- PLACE WHERE PORTFOLIO / ANALYSIS / REPORTS LOAD -->
-    <router-outlet></router-outlet>
-
-  </main>
-
+<div class="flex h-screen bg-gray-100">
+  <!-- SIDEBAR -->
+  <aside class="w-64 bg-white border-r flex flex-col min-h-screen">
+    <!-- Logo/Header -->
+    <div class="px-6 py-4 border-b flex items-center gap-2">
+      <img src="assets/finvista-logo.png" class="h-12 w-auto" />
+      <span class="font-semibold text-green-600 text-2xl">FinVista</span>
+    </div>
+    <!-- User Info -->
+    <div class="flex items-center gap-3 px-6 py-4">
+      <img src="assets/icons/user.png" alt="User profile" class="h-10 w-10" />
+      <div>
+        <p class="text-sm font-medium">{{ userName || 'User' }}</p>
+      </div>
+    </div>
+    <!-- Navigation -->
+    <nav class="flex-1 px-4 space-y-1 text-sm">
+      <a routerLink="/dashboard/portfolio" routerLinkActive="active-item" class="sidebar-item">
+        <img src="assets/icons/dashboard.png" class="w-auto h-5" />
+        Dashboard
+      </a>
+      <a routerLink="/dashboard/assets-liabilities" routerLinkActive="active-item" class="sidebar-item">
+        <img src="assets/icons/assets.png" class="w-auto h-6" />
+        Assets/Liabilities
+      </a>
+      <a routerLink="/dashboard/investments" routerLinkActive="active-item" class="sidebar-item">
+        <img src="assets/icons/invest.png" class="w-auto h-5" />
+        Invest
+      </a>
+      <a routerLink="/dashboard/analysis" routerLinkActive="active-item" class="sidebar-item">
+        <img src="assets/icons/analysis.png" class="w-auto h-5" />
+        Analysis
+      </a>
+      <a routerLink="/dashboard/reports" routerLinkActive="active-item" class="sidebar-item">
+        <img src="assets/icons/reports.png" class="w-auto h-5" />
+        Reports
+      </a>
+    </nav>
+    <!-- Logout Button -->
+    <button (click)="logout()" class="flex items-center gap-3 text-red-500 hover:text-red-700 cursor-pointer px-6 py-4">
+      <img src="assets/icons/logout.png" class="w-6 h-6" />
+      <span class="font-semibold text-lg">Logout</span>
+    </button>
+  </aside>
+  <!-- CONTENT -->
+  <div class="flex-1 flex flex-col min-h-screen">
+    <!-- HEADER -->
+    <app-dashboard-header [pageTitle]="pageTitle"></app-dashboard-header>
+    <!-- MAIN -->
+    <main class="flex-1 overflow-y-auto px-8 py-6">
+      <router-outlet></router-outlet>
+    </main>
+    <!-- FOOTER (global in app.component) -->
+  </div>
 </div>
+ 
