@@ -59,18 +59,20 @@ namespace backend.Controllers
             }
             foreach (var l in loans)
             {
+                var timeInYears = (l.DueDate - l.IssuedDate).TotalDays / 365;
+                var sum = (l.Amount * l.Interest * (decimal)timeInYears) / 100;
                 table.Add(new {
                     name = l.Name,
                     purchaseDate = l.IssuedDate.ToString("yyyy-MM-dd"),
                     dueDate = l.DueDate.ToString("yyyy-MM-dd"),
                     interest = l.Interest,
                     amount = l.Amount,
-                    sum = l.Amount * (l.Interest / 100m);
+                    sum
                 });
             }
 
             var netWorth = assets.Sum(a => CalculateAssetSum(a))
-                          - loans.Sum(l => l.Amount * (l.Interest / 100m));
+                          - loans.Sum(l => l.Amount + (l.Amount * l.Interest * (decimal)((l.DueDate - l.IssuedDate).TotalDays / 365)) / 100);
 
             return Ok(new
             {

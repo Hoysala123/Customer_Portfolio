@@ -1,4 +1,5 @@
 using backend.Data;
+using backend.Models;
 using backend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -36,14 +37,64 @@ namespace backend.Services
                 .Select(a => a.Action.Substring("Risk level set to ".Length))
                 .FirstOrDefault() ?? "Moderate";
 
+            decimal CalculateAssetSum(Asset asset)
+            {
+                if (asset.Type == "Bond" || asset.Type == "Bonds")
+                    return asset.Amount + (asset.Amount * 8 / 100);
+
+                if (asset.Type == "Fixed Deposit" || asset.Type == "FD")
+                    return asset.Amount + (asset.Amount * 7 / 100);
+
+                if (asset.Type == "Government Scheme")
+                    return asset.Amount + (asset.Amount * 7.5m / 100);
+
+                return asset.Amount;
+            }
+
+            var table = new List<object>();
+
+            foreach (var a in assets)
+            {
+                var sum = CalculateAssetSum(a);
+                table.Add(new
+                {
+                    name = a.Name,
+                    purchaseDate = a.PurchaseDate.ToString("yyyy-MM-dd"),
+                    dueDate = a.DueDate.ToString("yyyy-MM-dd"),
+                    interest = a.Interest,
+                    amount = a.Amount,
+                    sum
+                });
+            }
+
+            foreach (var l in loans)
+            {
+                var timeInYears = (l.DueDate - l.IssuedDate).TotalDays / 365;
+                var sum = (l.Amount * l.Interest * (decimal)timeInYears) / 100;
+                table.Add(new
+                {
+                    name = l.Name,
+                    purchaseDate = l.IssuedDate.ToString("yyyy-MM-dd"),
+                    dueDate = l.DueDate.ToString("yyyy-MM-dd"),
+                    interest = l.Interest,
+                    amount = l.Amount,
+                    sum
+                });
+            }
+
+            var netWorth = assets.Sum(a => CalculateAssetSum(a))
+                          - loans.Sum(l => l.Amount + (l.Amount * l.Interest * (decimal)((l.DueDate - l.IssuedDate).TotalDays / 365)) / 100);
+
             return new
             {
-                Assets = assets,
-                Loans = loans,
-                Investments = investments,
-                RiskLevel = latestRisk,
-                LatestRiskAlert = riskLogs.Select(a => a.Action).FirstOrDefault(),
-                RiskAlerts = riskLogs.Select(a => a.Action).ToList()
+                assets = assets,
+                loans = loans,
+                investments = investments,
+                riskLevel = latestRisk,
+                latestRiskAlert = riskLogs.Select(a => a.Action).FirstOrDefault(),
+                riskAlerts = riskLogs.Select(a => a.Action).ToList(),
+                table = table,
+                netWorth = netWorth
             };
         }
     }
