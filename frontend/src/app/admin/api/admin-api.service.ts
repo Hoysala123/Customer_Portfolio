@@ -145,6 +145,15 @@ export class AdminApiService {
     return this.http.get<any[]>(`${this.BASE_URL}/advisors`);
   }
 
+  addAdvisor(payload: {
+    name: string;
+    email: string;
+    phone: string;
+    passwordHash: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.BASE_URL}/advisors`, payload);
+  }
+
   // ================= NOTIFICATIONS / KYC =================
 
   getKycRequests(): Observable<

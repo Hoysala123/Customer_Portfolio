@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace backend.Migrations
 {
     /// <inheritdoc />
-    public partial class DecimalPrecisionFix : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -29,12 +29,75 @@ namespace backend.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Email = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Phone = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Advisors", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AuditLogs",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CustomerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Role = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Action = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Timestamp = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsRead = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AuditLogs", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "KycRequests",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CustomerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Phone = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    OtpCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    OtpGeneratedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsOtpVerified = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_KycRequests", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Customers",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Username = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Phone = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    KycStatus = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AdvisorId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Customers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Customers_Advisors_AdvisorId",
+                        column: x => x.AdvisorId,
+                        principalTable: "Advisors",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -53,38 +116,12 @@ namespace backend.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Assets", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "AuditLogs",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Role = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Action = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Timestamp = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AuditLogs", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Customers",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Username = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Phone = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    KycStatus = table.Column<string>(type: "nvarchar(max)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Customers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Assets_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -101,22 +138,12 @@ namespace backend.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Investments", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "KycRequests",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CustomerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Phone = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_KycRequests", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Investments_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -134,6 +161,12 @@ namespace backend.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Loans", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Loans_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
@@ -149,10 +182,30 @@ namespace backend.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Assets_CustomerId",
+                table: "Assets",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Customers_AdvisorId",
+                table: "Customers",
+                column: "AdvisorId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Customers_Username",
                 table: "Customers",
                 column: "Username",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Investments_CustomerId",
+                table: "Investments",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Loans_CustomerId",
+                table: "Loans",
+                column: "CustomerId");
         }
 
         /// <inheritdoc />
@@ -162,16 +215,10 @@ namespace backend.Migrations
                 name: "Admins");
 
             migrationBuilder.DropTable(
-                name: "Advisors");
-
-            migrationBuilder.DropTable(
                 name: "Assets");
 
             migrationBuilder.DropTable(
                 name: "AuditLogs");
-
-            migrationBuilder.DropTable(
-                name: "Customers");
 
             migrationBuilder.DropTable(
                 name: "Investments");
@@ -181,6 +228,12 @@ namespace backend.Migrations
 
             migrationBuilder.DropTable(
                 name: "Loans");
+
+            migrationBuilder.DropTable(
+                name: "Customers");
+
+            migrationBuilder.DropTable(
+                name: "Advisors");
         }
     }
 }
