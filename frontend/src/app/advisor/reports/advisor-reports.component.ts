@@ -27,16 +27,22 @@ export class AdvisorReportsComponent implements OnInit {
     responsive: true,
     maintainAspectRatio: false,
     scales: {
-      y: {
-        beginAtZero: true,
+      x: {
+        stacked: false,
         ticks: { font: { size: 10 } }
       },
-      x: {
+      y: {
+        stacked: false,
+        beginAtZero: true,
         ticks: { font: { size: 10 } }
       }
     },
     plugins: {
-      legend: { display: true, position: 'top', labels: { font: { size: 11 } } },
+      legend: {
+        display: true,
+        position: 'top',
+        labels: { font: { size: 11 } }
+      },
       tooltip: {
         callbacks: {
           label: (context) => {
@@ -92,6 +98,11 @@ export class AdvisorReportsComponent implements OnInit {
   loadPortfolioPerformance(): void {
     this.advisorApi.getPortfolioPerformance().subscribe({
       next: (response: any) => {
+
+        // ✅ IMPORTANT: reset previous data to avoid duplication
+        this.barChartData.datasets = [];
+        this.barChartData.labels = [];
+
         let monthlyData: string[] = [];
         let datasets: any[] = [];
 
@@ -104,17 +115,28 @@ export class AdvisorReportsComponent implements OnInit {
             borderColor: '#2563eb',
             borderWidth: 1
           }];
-        } else if (response && response.months && response.datasets) {
+        } else if (response?.months && response?.datasets) {
           monthlyData = response.months;
-          datasets = response.datasets.map((ds: any, idx: number) => ({
-            label: ds.label,
-            data: ds.data,
-            backgroundColor: this.getChartColor(idx),
-            borderColor: this.getChartBorderColor(idx),
-            borderWidth: 1
-          }));
+
+          // ✅ ensure no duplicate labels
+          const seen = new Set<string>();
+
+          datasets = response.datasets
+            .filter((ds: any) => {
+              if (seen.has(ds.label)) {
+                return false;
+              }
+              seen.add(ds.label);
+              return true;
+            })
+            .map((ds: any, idx: number) => ({
+              label: ds.label,
+              data: ds.data,
+              backgroundColor: this.getChartColor(idx),
+              borderColor: this.getChartBorderColor(idx),
+              borderWidth: 1
+            }));
         } else {
-          // Fallback: empty chart with placeholder month labels
           monthlyData = ['Jan', 'Feb', 'Mar'];
           datasets = [{
             label: 'Total Assets',
@@ -126,8 +148,8 @@ export class AdvisorReportsComponent implements OnInit {
         }
 
         this.barChartData = {
-          labels: monthlyData,
-          datasets: datasets
+          labels: [...monthlyData],
+          datasets: [...datasets]
         };
       },
       error: err => {
@@ -157,16 +179,14 @@ export class AdvisorReportsComponent implements OnInit {
   }
 
   downloadCustomerReport(customerId: string, name: string): void {
-    console.log('Downloading report for customer:', customerId, name);
     this.advisorApi.downloadCustomerReport(customerId).subscribe({
       next: blob => {
         const url = window.URL.createObjectURL(blob);
         const anchor = document.createElement('a');
         anchor.href = url;
-        anchor.download = `customer-report-${name.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-')}.csv`;
+        anchor.download = `customer-report-${name.replace(/[^a-zA-Z0-9]/g, '-')}.csv`;
         anchor.click();
         window.URL.revokeObjectURL(url);
-        console.log('Download initiated');
       },
       error: err => {
         console.error('Error downloading report:', err);
@@ -178,28 +198,22 @@ export class AdvisorReportsComponent implements OnInit {
     this.advisorApi.getOverallAnalysis().subscribe({
       next: (data: any[]) => {
         const bonds = data.find(d => d.label?.toLowerCase().includes('bond'))?.value || 0;
-        const fd = data.find(d => d.label?.toLowerCase().includes('fixed deposit') || d.label?.toLowerCase().includes('fd'))?.value || 0;
+        const fd = data.find(d =>
+          d.label?.toLowerCase().includes('fixed deposit') ||
+          d.label?.toLowerCase().includes('fd')
+        )?.value || 0;
         const loans = data.find(d => d.label?.toLowerCase().includes('loan'))?.value || 0;
-
-        const values = (bonds + fd + loans) > 0 ? [bonds, fd, loans] : [1, 1, 1];
 
         this.pieChartData = {
           labels: ['Bonds', 'Fixed Deposit', 'Loans'],
           datasets: [{
-            data: [...values],
+            data: [bonds, fd, loans],
             backgroundColor: ['#60a5fa', '#34d399', '#fbbf24']
           }]
         };
       },
       error: err => {
         console.error('Error loading overall analysis:', err);
-        this.pieChartData = {
-          labels: ['Bonds', 'Fixed Deposit', 'Loans'],
-          datasets: [{
-            data: [1, 1, 1],
-            backgroundColor: ['#60a5fa', '#34d399', '#fbbf24']
-          }]
-        };
       }
     });
   }
