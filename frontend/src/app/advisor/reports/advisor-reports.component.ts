@@ -181,7 +181,7 @@ export class AdvisorReportsComponent implements OnInit {
         const fd = data.find(d => d.label?.toLowerCase().includes('fixed deposit') || d.label?.toLowerCase().includes('fd'))?.value || 0;
         const loans = data.find(d => d.label?.toLowerCase().includes('loan'))?.value || 0;
 
-        const values = (bonds + fd + loans) > 0 ? [bonds, fd, loans] : [1, 1, 1];
+        const values = (bonds + fd + loans) > 0 ? [bonds, fd, loans] : [];
 
         this.pieChartData = {
           labels: ['Bonds', 'Fixed Deposit', 'Loans'],
@@ -196,7 +196,7 @@ export class AdvisorReportsComponent implements OnInit {
         this.pieChartData = {
           labels: ['Bonds', 'Fixed Deposit', 'Loans'],
           datasets: [{
-            data: [1, 1, 1],
+            data: [],
             backgroundColor: ['#60a5fa', '#34d399', '#fbbf24']
           }]
         };
