@@ -1,6 +1,6 @@
 using backend.Data;
 using backend.DTOs.Auth;
-using backend.Services.Interfaces;   // ✅ REQUIRED
+using backend.Services.Interfaces;   //  REQUIRED
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Services.AuthService
@@ -19,7 +19,7 @@ namespace backend.Services.AuthService
         public async Task<AuthResponse> LoginAsync(AdvisorLoginRequest request)
         {
             var advisor = await db.Advisors
-                .FirstOrDefaultAsync(x => x.Email == request.Email);
+                .FirstOrDefaultAsync(x => x.Email == request.Username);
 
             // ✅ Plain‑text comparison
             if (advisor == null || advisor.PasswordHash != request.Password)

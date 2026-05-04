@@ -1,6 +1,8 @@
+
 using backend.Data;
 using backend.DTOs.Advisor;
 using backend.Models;
+using backend.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
@@ -14,85 +16,116 @@ namespace backend.Controllers
     public class AdvisorController : ControllerBase
     {
         private readonly FinVistaDbContext db;
+        private readonly ILogger<AdvisorController> logger;
 
-        public AdvisorController(FinVistaDbContext db)
+        public AdvisorController(FinVistaDbContext db, ILogger<AdvisorController> logger)
         {
             this.db = db;
+            this.logger = logger;
         }
 
         [HttpGet("customers")]
         public async Task<IActionResult> GetCustomersUnderAdvisor()
         {
             var advisorId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            logger.LogInfo($"GET /api/advisor/customers called by advisor: {advisorId}");
 
-            var customers = await db.Customers
-                .Where(c => c.AdvisorId == advisorId)
-                .ToListAsync();
-
-            var customerIds = customers.Select(c => c.Id).ToList();
-
-            var investments = await db.Investments
-                .Where(i => customerIds.Contains(i.CustomerId))
-                .ToListAsync();
-
-            var loans = await db.Loans
-                .Where(l => customerIds.Contains(l.CustomerId))
-                .ToListAsync();
-
-            var riskLogs = await db.AuditLogs
-                .Where(a => customerIds.Contains(a.CustomerId) && a.Action.StartsWith("Risk level set to "))
-                .OrderByDescending(a => a.Timestamp)
-                .ToListAsync();
-
-            var result = customers.Select(c => new AdvisorCustomerDto
+            try
             {
-                Id = c.Id,
-                Name = c.Name,
-                Username = c.Username,
-                Email = c.Email,
-                Phone = c.Phone,
-                Assets = investments.Where(i => i.CustomerId == c.Id).Sum(i => i.Amount).ToString("F0"),
-                Liabilities = loans.Where(l => l.CustomerId == c.Id).Sum(l => l.Amount).ToString("F0"),
-                Risk = riskLogs
-                    .Where(a => a.CustomerId == c.Id)
-                    .Select(a => a.Action.Substring("Risk level set to ".Length))
-                    .FirstOrDefault() ?? "Medium",
-                KycStatus = c.KycStatus,
-                Alert = !investments.Any(i => i.CustomerId == c.Id && i.Type == "Portfolio Created"),
-                PortfolioCreated = investments.Any(i => i.CustomerId == c.Id && i.Type == "Portfolio Created")
-            })
-            .ToList();
+                var customers = await db.Customers
+                    .Where(c => c.AdvisorId == advisorId)
+                    .ToListAsync();
 
-            return Ok(result);
+                var customerIds = customers.Select(c => c.Id).ToList();
+
+                var investments = await db.Investments
+                    .Where(i => customerIds.Contains(i.CustomerId))
+                    .ToListAsync();
+
+                var assets = await db.Assets
+                    .Where(a => customerIds.Contains(a.CustomerId))
+                    .ToListAsync();
+
+                var loans = await db.Loans
+                    .Where(l => customerIds.Contains(l.CustomerId))
+                    .ToListAsync();
+
+                var riskLogs = await db.AuditLogs
+                    .Where(a => customerIds.Contains(a.CustomerId) && a.Action.StartsWith("Risk level set to "))
+                    .OrderByDescending(a => a.Timestamp)
+                    .ToListAsync();
+
+                var result = customers.Select(c => new AdvisorCustomerDto
+                {
+                    Id = c.Id,
+                    Name = c.Name,
+                    Username = c.Username,
+                    Email = c.Email,
+                    Phone = c.Phone,
+                    Assets = assets.Where(a => a.CustomerId == c.Id).Sum(a => a.Amount).ToString("F0"),
+                    Liabilities = loans.Where(l => l.CustomerId == c.Id).Sum(l => l.Amount).ToString("F0"),
+                    Risk = riskLogs
+                        .Where(a => a.CustomerId == c.Id)
+                        .Select(a => a.Action.Substring("Risk level set to ".Length))
+                        .FirstOrDefault() ?? "Medium",
+                    KycStatus = c.KycStatus,
+                    Alert = !investments.Any(i => i.CustomerId == c.Id && i.Type == "Portfolio Created"),
+                    PortfolioCreated = investments.Any(i => i.CustomerId == c.Id && i.Type == "Portfolio Created")
+                }).ToList();
+
+                logger.LogInfo($"Retrieved customers for advisor - Count: {result.Count}");
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                logger.LogErr(ex, $"Failed to retrieve customers for advisor: {advisorId}");
+                return BadRequest(new { message = $"Error: {ex.Message}" });
+            }
         }
 
         [HttpPost("customers/{customerId}/risk")]
         public async Task<IActionResult> SetCustomerRisk(Guid customerId, RiskUpdateDto dto)
         {
             var advisorId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            logger.LogInfo($"POST /api/advisor/customers/{customerId}/risk called by advisor: {advisorId} - Risk: {dto.RiskLevel}");
 
-            var customer = await db.Customers
-                .FirstOrDefaultAsync(c => c.Id == customerId && c.AdvisorId == advisorId);
-
-            if (customer == null)
-                return NotFound();
-
-            var normalized = dto.RiskLevel?.Trim();
-            if (normalized != "High" && normalized != "Medium" && normalized != "Low")
-                return BadRequest(new { message = "RiskLevel must be High, Medium or Low." });
-
-            db.AuditLogs.Add(new AuditLog
+            try
             {
-                Id = Guid.NewGuid(),
-                CustomerId = customer.Id,
-                Role = "Advisor",
-                Action = $"Risk level set to {normalized}",
-                Status = "Success",
-                Timestamp = DateTime.UtcNow
-            });
+                var customer = await db.Customers
+                    .FirstOrDefaultAsync(c => c.Id == customerId && c.AdvisorId == advisorId);
 
-            await db.SaveChangesAsync();
-            return Ok(new { riskLevel = normalized });
+                if (customer == null)
+                {
+                    logger.LogWarn($"Risk update failed - Customer {customerId} not found for advisor {advisorId}");
+                    return NotFound();
+                }
+
+                var normalized = dto.RiskLevel?.Trim();
+                if (normalized != "High" && normalized != "Medium" && normalized != "Low")
+                {
+                    logger.LogWarn($"Risk update failed - Invalid risk level: {normalized}");
+                    return BadRequest(new { message = "RiskLevel must be High, Medium or Low." });
+                }
+
+                db.AuditLogs.Add(new AuditLog
+                {
+                    Id = Guid.NewGuid(),
+                    CustomerId = customer.Id,
+                    Role = "Advisor",
+                    Action = $"Risk level set to {normalized}",
+                    Status = "Success",
+                    Timestamp = DateTime.UtcNow
+                });
+
+                await db.SaveChangesAsync();
+                logger.LogInfo($"Risk level updated successfully - CustomerId: {customerId}, Risk: {normalized}");
+                return Ok(new { riskLevel = normalized });
+            }
+            catch (Exception ex)
+            {
+                logger.LogErr(ex, $"Failed to update risk level for customer: {customerId}");
+                return BadRequest(new { message = $"Error: {ex.Message}" });
+            }
         }
 
         [HttpPost("customers/{customerId}/alert")]
@@ -207,7 +240,6 @@ namespace backend.Controllers
             if (await db.Investments.AnyAsync(i => i.CustomerId == customerId && i.Type == "Portfolio Created"))
                 return BadRequest(new { message = "Portfolio already exists for this customer." });
 
-            // Create a simple portfolio entry to mark the portfolio as created.
             db.Investments.Add(new Investment
             {
                 Id = Guid.NewGuid(),
@@ -233,8 +265,8 @@ namespace backend.Controllers
             return Ok(new { message = "Portfolio created successfully." });
         }
 
-        [HttpGet("dashboard/summary")]
-        public async Task<IActionResult> GetDashboardSummary()
+        [HttpGet("debug/assets")]
+        public async Task<IActionResult> DebugAssetsForAdvisor()
         {
             var advisorId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
@@ -251,7 +283,9 @@ namespace backend.Controllers
 
             var riskAlerts = await db.Customers
                 .Where(c => c.AdvisorId == advisorId)
-                .Where(c => !db.Investments.Any(i => i.CustomerId == c.Id && i.Type == "Portfolio Created"))
+                .Where(c => !db.Investments.Any(i =>
+                    i.CustomerId == c.Id &&
+                    i.Type == "Portfolio Created"))
                 .CountAsync();
 
             return Ok(new
@@ -348,59 +382,39 @@ namespace backend.Controllers
                 .Select(c => c.Id)
                 .ToListAsync();
 
-            // Get all assets with customer info grouped by month
-            var assetData = await db.Assets
+            var monthlyAssets = await db.Assets
                 .Where(a => customerIds.Contains(a.CustomerId))
-                .Include(a => a.Customer)
                 .GroupBy(a => new { a.PurchaseDate.Year, a.PurchaseDate.Month })
                 .OrderBy(g => g.Key.Year)
                 .ThenBy(g => g.Key.Month)
-                .Select(g => new backend.DTOs.Advisor.PortfolioMonthDto
+                .Select(g => new
                 {
-                    Month = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMM yyyy"),
-                    Value = g.Sum(a => a.Amount)
+                    MonthDate = new DateTime(g.Key.Year, g.Key.Month, 1),
+                    MonthlyTotal = g.Sum(a => a.Amount)
                 })
                 .ToListAsync();
 
-            // Get all investments with customer info grouped by month
-            var investmentData = await db.Investments
-                .Where(i => customerIds.Contains(i.CustomerId))
-                .Include(i => i.Customer)
-                .Where(i => i.Type != "Portfolio Created") // Exclude marker entries
-                .GroupBy(i => new { i.Date.Year, i.Date.Month })
-                .OrderBy(g => g.Key.Year)
-                .ThenBy(g => g.Key.Month)
-                .Select(g => new backend.DTOs.Advisor.PortfolioMonthDto
-                {
-                    Month = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMM yyyy"),
-                    Value = g.Sum(i => i.Amount)
-                })
-                .ToListAsync();
-
-            // Merge both data sources
-            var allMonths = assetData.Select(d => d.Month)
-                .Concat(investmentData.Select(d => d.Month))
-                .Distinct()
-                .OrderBy(m => DateTime.ParseExact(m, "MMM yyyy", System.Globalization.CultureInfo.InvariantCulture))
-                .ToList();
-
-            var mergedData = allMonths.Select(month => new backend.DTOs.Advisor.PortfolioMonthDto
+            decimal cumulative = 0;
+            var result = monthlyAssets.Select(m =>
             {
-                Month = month,
-                Value = (assetData.FirstOrDefault(d => d.Month == month)?.Value ?? 0) +
-                        (investmentData.FirstOrDefault(d => d.Month == month)?.Value ?? 0)
+                cumulative += m.MonthlyTotal;
+                return new backend.DTOs.Advisor.PortfolioMonthDto
+                {
+                    Month = m.MonthDate.ToString("MMM yyyy"),
+                    Value = cumulative
+                };
             }).ToList();
 
-            // If no data, return dummy data for visualization
-            if (!mergedData.Any())
+            if (!result.Any())
             {
-                mergedData = new List<backend.DTOs.Advisor.PortfolioMonthDto>
+                result.Add(new backend.DTOs.Advisor.PortfolioMonthDto
                 {
-                    new backend.DTOs.Advisor.PortfolioMonthDto { Month = DateTime.UtcNow.ToString("MMM yyyy"), Value = 0 }
-                };
+                    Month = DateTime.UtcNow.ToString("MMM yyyy"),
+                    Value = 0
+                });
             }
 
-            return Ok(mergedData);
+            return Ok(result);
         }
 
         [HttpGet("reports/overall-analysis")]
@@ -413,7 +427,6 @@ namespace backend.Controllers
                 .Select(c => c.Id)
                 .ToListAsync();
 
-            // Get asset values by type
             var bondValue = await db.Assets
                 .Where(a => customerIds.Contains(a.CustomerId) && (a.Type == "Bond" || a.Type == "Bonds"))
                 .SumAsync(a => (decimal?)a.Amount) ?? 0;
@@ -435,6 +448,40 @@ namespace backend.Controllers
 
             return Ok(result);
         }
+
+        // ---------------------------------------------------
+        // ✅ ADDED: REQUIRED DASHBOARD SUMMARY ENDPOINT
+        // ---------------------------------------------------
+
+        [HttpGet("dashboard/summary")]
+public async Task<IActionResult> GetAdvisorDashboardSummary()
+{
+    var advisorId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+    var customerIds = await db.Customers
+        .Where(c => c.AdvisorId == advisorId)
+        .Select(c => c.Id)
+        .ToListAsync();
+
+    int totalCustomers = customerIds.Count;
+
+    decimal totalAssets = await db.Assets
+        .Where(a => customerIds.Contains(a.CustomerId))
+        .SumAsync(a => (decimal?)a.Amount) ?? 0;
+
+    // ✔ NEW LOGIC
+    int activeAlerts = await db.AuditLogs
+        .Where(a => customerIds.Contains(a.CustomerId))
+        .Where(a => a.Action == "Alert from advisor")
+        .Where(a => a.Status == "Success")
+        .CountAsync();
+
+    return Ok(new
+    {
+        TotalCustomers = totalCustomers,
+        TotalAssets = totalAssets,
+        ActiveAlerts = activeAlerts
+    });
+}
     }
 }
-

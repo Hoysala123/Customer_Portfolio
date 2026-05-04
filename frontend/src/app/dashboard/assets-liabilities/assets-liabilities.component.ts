@@ -63,6 +63,13 @@ export class AssetsLiabilitiesComponent {
     this.assetsService.addBonds(payload).subscribe({
       next: () => {
         alert("Bonds saved successfully!");
+        this.bondsForm = {
+          name: '',
+          purchaseDate: '',
+          dueDate: '',
+          interest: '',
+          amount: ''
+        };
         this.loadAssets();
       },
       error: (err) => {
@@ -83,6 +90,13 @@ export class AssetsLiabilitiesComponent {
     this.assetsService.addFixedDeposit(payload).subscribe({
       next: () => {
         alert("Fixed Deposit saved successfully!");
+        this.fdForm = {
+          name: '',
+          purchaseDate: '',
+          dueDate: '',
+          interest: '',
+          amount: ''
+        };
         this.loadAssets();
       },
       error: (err) => {
@@ -103,6 +117,13 @@ export class AssetsLiabilitiesComponent {
     this.assetsService.addLoan(payload).subscribe({
       next: () => {
         alert("Loan saved successfully!");
+        this.loanForm = {
+          name: '',
+          issuedDate: '',
+          dueDate: '',
+          interest: '',
+          amount: ''
+        };
         this.loadAssets();
       },
       error: (err) => {

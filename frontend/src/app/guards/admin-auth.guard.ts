@@ -1,20 +1,28 @@
 import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
-import { AuthService } from '../services/auth.service';
+import { LoggerService } from '../services/logger.service';
 
 export const adminAuthGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
-  const authService = inject(AuthService);
-  const role = authService.getCurrentUserRole();
+  const logger = inject(LoggerService);
+  const token = localStorage.getItem('token');
+  const role = localStorage.getItem('role');
+  const username = localStorage.getItem('username') || 'Unknown';
 
-  console.log('Admin Guard - Role:', role, 'Attempting to access:', state.url);
+  logger.info(`Admin Guard Check - Token: ${!!token}, Role: ${role}, Attempting to access: ${state.url}`);
 
-  if (authService.isLoggedIn() && role === 'Admin') {
-    console.log('Admin Guard - Access GRANTED');
+  if (token && role === 'Admin') {
+    logger.info(`Admin Guard - Access GRANTED for user: ${username}`);
     return true;
   }
 
-  console.log('Admin Guard - Access DENIED. Clearing session and redirecting to login.');
-  authService.logout();
+  logger.warn(`Admin Guard - Access DENIED. Clearing session and redirecting to login for user: ${username}`);
+  
+  // Clear invalid session
+  localStorage.removeItem('token');
+  localStorage.removeItem('role');
+  localStorage.removeItem('id');
+  localStorage.removeItem('username');
+  
   return router.createUrlTree(['/login']);
 };

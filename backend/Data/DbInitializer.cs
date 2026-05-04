@@ -10,57 +10,86 @@ namespace backend.Data
 
         public static void Initialize(FinVistaDbContext db)
         {
-            // Ensure database exists and apply any pending migrations
-            
-
-            // ============================
-            // SEED ADMIN (PLAIN TEXT PASSWORD)
-            // ============================
-            if (!db.Admins.Any())
+            try
             {
+                // ============================
+                // ONLY SEED IF NOT EXISTS
+                // ============================
+                // Check if data already exists
+                if (db.Admins.Any() && db.Advisors.Any())
+                {
+                    return; // Data already seeded, don't delete/recreate
+                }
+
+                // ============================
+                // DELETE ONLY IF EMPTY/FIRST RUN
+                // ============================
+                // Clear in reverse order of foreign key dependencies
+                var kycRequests = db.KycRequests.ToList();
+                if (kycRequests.Count > 0) db.KycRequests.RemoveRange(kycRequests);
+                
+                var auditLogs = db.AuditLogs.ToList();
+                if (auditLogs.Count > 0) db.AuditLogs.RemoveRange(auditLogs);
+                
+                var investments = db.Investments.ToList();
+                if (investments.Count > 0) db.Investments.RemoveRange(investments);
+                
+                var assets = db.Assets.ToList();
+                if (assets.Count > 0) db.Assets.RemoveRange(assets);
+                
+                var loans = db.Loans.ToList();
+                if (loans.Count > 0) db.Loans.RemoveRange(loans);
+                
+                var customersToDelete = db.Customers.ToList();
+                if (customersToDelete.Count > 0) db.Customers.RemoveRange(customersToDelete);
+                
+                var advisorsToDelete = db.Advisors.ToList();
+                if (advisorsToDelete.Count > 0) db.Advisors.RemoveRange(advisorsToDelete);
+                
+                var admins = db.Admins.ToList();
+                if (admins.Count > 0) db.Admins.RemoveRange(admins);
+                
+                db.SaveChanges();
+
+                // ============================
+                // SEED ADMIN (PLAIN TEXT PASSWORD)
+                // ============================
                 db.Admins.Add(new Admin
                 {
                     Id = Guid.NewGuid(),
                     Email = "admin@finvista.com",
-                    PasswordHash = "Admin@123" 
+                    PasswordHash = "Admin@123"
                 });
-            }
+                db.SaveChanges();
 
-            // ============================
-            // SEED ADVISOR (PLAIN TEXT PASSWORD)
-            // ============================
-            if (!db.Advisors.Any(a => a.Email == "advisor@finvista.com"))
-            {
+                // ============================
+                // SEED ADVISORS (PLAIN TEXT PASSWORD)
+                // ============================
                 db.Advisors.Add(new Advisor
                 {
                     Id = Guid.NewGuid(),
                     Name = "Advisor1",
                     Email = "advisor@finvista.com",
                     Phone = "9611971395",
-                    PasswordHash = "Advisor@123" 
+                    PasswordHash = "Advisor@123"
                 });
-            }
 
-            if (!db.Advisors.Any(a => a.Email == "advisor2@finvista.com"))
-            {
                 db.Advisors.Add(new Advisor
                 {
                     Id = Guid.NewGuid(),
                     Name = "Advisor2",
                     Email = "advisor2@finvista.com",
                     Phone = "6364221063",
-                    PasswordHash = "Advisor2@123" 
+                    PasswordHash = "Advisor2@123"
                 });
-            }
-
-            db.SaveChanges();
+                db.SaveChanges();
 
             // ============================
             // SEED CUSTOMERS FROM DYNAMIC TEMPLATES
             // ============================
             if (!db.Customers.Any())
             {
-                var advisors = db.Advisors.ToDictionary(a => a.Email, a => a.Id);
+                var advisorDict = db.Advisors.ToDictionary(a => a.Email, a => a.Id);
 
                 var firstNames = new[] { "John", "Jane", "Bob" };
                 var lastNames = new[] { "Doe", "Smith", "Johnson" };
@@ -93,7 +122,7 @@ namespace backend.Data
 
                 foreach (var template in customerTemplates)
                 {
-                    if (!advisors.TryGetValue(template.AdvisorEmail, out var advisorId))
+                    if (!advisorDict.TryGetValue(template.AdvisorEmail, out var advisorId))
                         continue;
 
                     var usernameBase = (template.FirstName + template.LastName).ToLowerInvariant();
@@ -135,7 +164,7 @@ namespace backend.Data
                         CustomerId = customer.Id,
                         Name = "Bond Investment",
                         Type = "Bond",
-                        Amount = 30000M,
+                        Amount = 25000M,
                         Interest = 5M,
                         PurchaseDate = DateTime.UtcNow.AddMonths(-6),
                         DueDate = DateTime.UtcNow.AddMonths(6)
@@ -170,9 +199,9 @@ namespace backend.Data
 
             if (db.Customers.Any())
             {
-                var customers = db.Customers.ToList();
+                var seededCustomers = db.Customers.ToList();
 
-                foreach (var customer in customers)
+                foreach (var customer in seededCustomers)
                 {
                     if (!db.Loans.Any(l => l.CustomerId == customer.Id))
                     {
@@ -216,6 +245,12 @@ namespace backend.Data
                 }
 
                 db.SaveChanges();
+            }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Database initialization error: {ex.Message}");
+                throw;
             }
         }
     }

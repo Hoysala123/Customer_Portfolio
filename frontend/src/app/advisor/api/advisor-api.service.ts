@@ -17,12 +17,12 @@ export class AdvisorApiService {
 
   getDashboardSummary(): Observable<{
     totalCustomers: number;
-    totalAssets: string;
+    totalAssets: number;
     riskAlerts: number;
   }> {
     return this.http.get<{
       totalCustomers: number;
-      totalAssets: string;
+      totalAssets: number;
       riskAlerts: number;
     }>(`${this.BASE_URL}/dashboard/summary`);
   }

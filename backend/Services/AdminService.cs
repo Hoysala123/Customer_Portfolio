@@ -1,76 +1,124 @@
 using backend.Data;
 using backend.Models;
 using backend.Services.Interfaces;
+using backend.Helpers;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Services
 {
+    /// <summary>
+    /// Service for admin-related operations and reporting.
+    /// </summary>
     public class AdminService : IAdminService
     {
         private readonly FinVistaDbContext db;
+        private readonly ILogger<AdminService> logger;
 
-        public AdminService(FinVistaDbContext db)
+        public AdminService(FinVistaDbContext db, ILogger<AdminService> logger)
         {
             this.db = db;
+            this.logger = logger;
         }
 
         public async Task<IEnumerable<object>> GetAllCustomersAsync()
         {
-            return await db.Customers
-                .Select(c => new
-                {
-                    c.Id,
-                    c.Name,
-                    c.Username,
-                    c.Email,
-                    c.Phone,
-                    Advisor = c.Advisor != null ? c.Advisor.Email : "Unassigned",
-                    c.KycStatus,
-                    Risk = db.AuditLogs
-                        .Where(a => a.CustomerId == c.Id && a.Action.StartsWith("Risk level set to "))
-                        .OrderByDescending(a => a.Timestamp)
-                        .Select(a => a.Action.Substring("Risk level set to ".Length))
-                        .FirstOrDefault() ?? "Medium"
-                })
-                .ToListAsync();
+            logger.LogInfo("Retrieving all customers");
+
+            try
+            {
+                var result = await db.Customers
+                    .Select(c => new
+                    {
+                        c.Id,
+                        c.Name,
+                        c.Username,
+                        c.Email,
+                        c.Phone,
+                        Advisor = c.Advisor != null ? c.Advisor.Email : "Unassigned",
+                        c.KycStatus,
+                        Risk = db.AuditLogs
+                            .Where(a => a.CustomerId == c.Id && a.Action.StartsWith("Risk level set to "))
+                            .OrderByDescending(a => a.Timestamp)
+                            .Select(a => a.Action.Substring("Risk level set to ".Length))
+                            .FirstOrDefault() ?? "Medium"
+                    })
+                    .ToListAsync();
+
+                logger.LogInfo($"All customers retrieved successfully - Count: {result.Count}");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                logger.LogErr(ex, "Failed to retrieve all customers");
+                throw;
+            }
         }
 
         public async Task SetCustomerRiskAsync(Guid customerId, string riskLevel)
         {
-            var customer = await db.Customers.FindAsync(customerId);
-            if (customer == null)
-                throw new InvalidOperationException("Customer not found");
+            logger.LogInfo($"Setting customer risk - CustomerId: {customerId}, RiskLevel: {riskLevel}");
 
-            db.AuditLogs.Add(new AuditLog
+            try
             {
-                Id = Guid.NewGuid(),
-                CustomerId = customerId,
-                Role = "Admin",
-                Action = $"Risk level set to {riskLevel}",
-                Status = "Success",
-                Timestamp = DateTime.UtcNow
-            });
+                var customer = await db.Customers.FindAsync(customerId);
+                if (customer == null)
+                {
+                    logger.LogWarn($"Set customer risk failed - Customer not found: {customerId}");
+                    throw new InvalidOperationException("Customer not found");
+                }
 
-            await db.SaveChangesAsync();
+                db.AuditLogs.Add(new AuditLog
+                {
+                    Id = Guid.NewGuid(),
+                    CustomerId = customerId,
+                    Role = "Admin",
+                    Action = $"Risk level set to {riskLevel}",
+                    Status = "Success",
+                    Timestamp = DateTime.UtcNow
+                });
+
+                await db.SaveChangesAsync();
+                logger.LogInfo($"Customer risk set successfully - CustomerId: {customerId}, RiskLevel: {riskLevel}");
+            }
+            catch (Exception ex)
+            {
+                logger.LogErr(ex, $"Failed to set customer risk - CustomerId: {customerId}");
+                throw;
+            }
         }
 
         public async Task<IEnumerable<DTOs.Admin.AdminAdvisorDto>> GetAllAdvisorsAsync()
         {
-            return await db.Advisors
-                .Select(a => new DTOs.Admin.AdminAdvisorDto
-                {
-                    Id = a.Id,
-                    Name = a.Name ?? a.Email,
-                    Email = a.Email,
-                    Contact = a.Phone ?? "",
-                    Status = "Active", // Assuming all are active
-                    AllocatedCustomerCount = db.Customers.Count(c => c.AdvisorId == a.Id)
-                })
-                .ToListAsync();
+            logger.LogInfo("Retrieving all advisors");
+
+            try
+            {
+                var result = await db.Advisors
+                    .Select(a => new DTOs.Admin.AdminAdvisorDto
+                    {
+                        Id = a.Id,
+                        Name = a.Name ?? a.Email,
+                        Email = a.Email,
+                        Contact = a.Phone ?? "",
+                        Status = "Active", // Assuming all are active
+                        AllocatedCustomerCount = db.Customers.Count(c => c.AdvisorId == a.Id)
+                    })
+                    .ToListAsync();
+
+                logger.LogInfo($"All advisors retrieved successfully - Count: {result.Count}");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                logger.LogErr(ex, "Failed to retrieve all advisors");
+                throw;
+            }
         }
 
         public async Task<IEnumerable<DTOs.Admin.AdminCustomerReportDto>> GetCustomerReportsAsync()
         {
+            logger.LogInfo("Generating customer reports");
+
             try
             {
                 var advisorsById = await db.Advisors
@@ -90,16 +138,19 @@ namespace backend.Services
                             .OrderByDescending(a => a.Timestamp)
                             .Select(a => a.Action)
                             .FirstOrDefault(),
-                        TotalAssets = db.Assets
+                        TotalAssets = (db.Assets
                             .Where(a => a.CustomerId == c.Id)
-                            .Sum(a => (decimal?)a.Amount) ?? 0,
+                            .Sum(a => (decimal?)a.Amount) ?? 0) + 
+                            (db.Investments
+                            .Where(i => i.CustomerId == c.Id)
+                            .Sum(i => (decimal?)i.Amount) ?? 0),
                         TotalLiabilities = db.Loans
                             .Where(l => l.CustomerId == c.Id)
                             .Sum(l => (decimal?)l.Amount) ?? 0
                     })
                     .ToListAsync();
 
-                return customers.Select(c => new DTOs.Admin.AdminCustomerReportDto
+                var report = customers.Select(c => new DTOs.Admin.AdminCustomerReportDto
                 {
                     Id = c.Id,
                     Name = c.Name,
@@ -114,11 +165,13 @@ namespace backend.Services
                     TotalLiabilities = c.TotalLiabilities,
                     NetWorth = c.TotalAssets - c.TotalLiabilities
                 }).ToList();
+
+                logger.LogInfo($"Customer reports generated successfully - Count: {report.Count}");
+                return report;
             }
             catch (Exception ex)
             {
-                // Log the error and return empty list
-                Console.WriteLine($"Error in GetCustomerReportsAsync: {ex.Message}");
+                logger.LogErr(ex, "Failed to generate customer reports");
                 return new List<DTOs.Admin.AdminCustomerReportDto>();
             }
         }

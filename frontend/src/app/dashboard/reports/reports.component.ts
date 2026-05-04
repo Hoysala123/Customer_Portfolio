@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReportsService } from '../../services/reports.service';
+import { PortfolioService } from '../../services/portfolio.service';
 
 @Component({
   selector: 'app-reports',
@@ -16,21 +17,72 @@ export class ReportsComponent implements OnInit {
   customerPhone: string = '';
   customerEmail: string = '';
 
-  constructor(private reportsService: ReportsService) {}
+  constructor(private reportsService: ReportsService, private portfolioService: PortfolioService) {}
 
-  ngOnInit(): void {
-    const customerId = localStorage.getItem('id');
 
-    if (customerId) {
-      this.reportsService.getReports(customerId).subscribe((data: any) => {
-        this.tableData = data.table || [];
-        this.netWorth = data.netWorth || 0;
-        this.customerName = data.customerName || '';
-        this.customerPhone = data.customerPhone || '';
-        this.customerEmail = data.customerEmail || '';
-      });
-    }
-  }
+ngOnInit(): void {
+  const customerId = localStorage.getItem('id');
+  if (!customerId) return;
+
+  /* ================= FETCH PORTFOLIO (SOURCE OF TRUTH) ================= */
+  this.portfolioService.getPortfolio(customerId).subscribe((data: any) => {
+
+    /* ---------- ASSETS ---------- */
+   /* ---------- ASSETS ---------- */
+const assets = (data.assets || data.Assets || []).map((a: any) => {
+  let sum = Number(a.amount);
+
+  if (a.type === 'FD' || a.type === 'Fixed Deposit') sum += sum * 0.07;
+  else if (a.type === 'Bond' || a.type === 'Bonds') sum += sum * 0.08;
+  else if (a.type === 'Government Scheme') sum += sum * 0.075;
+
+  return {
+    name: a.name,
+    purchaseDate: a.purchaseDate?.split('T')[0],  // ✅ date only
+    dueDate: a.dueDate?.split('T')[0],            // ✅ date only
+    interest: a.interest ?? '-',
+    amount: Number(a.amount),
+    sum
+  };
+});
+
+/* ---------- LOANS ---------- */
+const loans = (data.loans || data.Loans || []).map((l: any) => {
+  const issued = new Date(l.issuedDate);
+  const due = new Date(l.dueDate);
+
+  const years =
+    (due.getTime() - issued.getTime()) / (1000 * 60 * 60 * 24 * 365);
+
+  const totalPayable =
+    Number(l.amount) +
+    (Number(l.amount) * Number(l.interest) * years) / 100;
+
+  return {
+    name: l.name,
+    purchaseDate: l.issuedDate?.split('T')[0],   // ✅ date only
+    dueDate: l.dueDate?.split('T')[0],           // ✅ date only
+    interest: l.interest,
+    amount: Number(l.amount),
+    sum: -totalPayable
+  };
+});
+
+this.tableData = [...assets, ...loans];
+
+
+    this.netWorth = this.tableData.reduce(
+      (t, r) => t + r.sum, 0
+    );
+  });
+
+  /* ================= FETCH CUSTOMER INFO ================= */
+  this.reportsService.getReports(customerId).subscribe((data: any) => {
+    this.customerName = data.customerName || '';
+    this.customerPhone = data.customerPhone || '';
+    this.customerEmail = data.customerEmail || '';
+  });
+}
 
   downloadStatement(): void {
     const companyName = 'FinVista';
