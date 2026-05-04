@@ -162,18 +162,28 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   private updateBarChart(data: any[]): void {
-    this.barChartData = {
-      labels: data.map(d => d.month || d.name),
-      datasets: [
-        {
-          label: 'Portfolio Performance',
-          data: data.map(d => d.value),
-          backgroundColor: '#3b82f6'
-        }
-      ]
-    };
-    this.cdr.detectChanges();
+  if (!data || data.length === 0) {
+    return;
   }
+
+  const label = data[0].month || data[0].name;
+
+  // ✅ Use Total Assets as the single source of truth
+  const value = this.summary?.totalAssets ?? data[0].value;
+
+  this.barChartData = {
+    labels: [label],
+    datasets: [
+      {
+        label: 'Portfolio Performance',
+        data: [value],
+        backgroundColor: '#3b82f6'
+      }
+    ]
+  };
+
+  this.cdr.detectChanges();
+}
 
   private updatePieChart(data: any[]): void {
     this.pieChartData = {
