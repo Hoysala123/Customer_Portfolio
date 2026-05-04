@@ -38,7 +38,7 @@ export class AdvisorDashboardComponent implements OnInit {
       next: data => {
         this.summary = {
           totalCustomers: data.totalCustomers,
-          totalAssets: data.totalAssets,
+          totalAssets: data.totalAssets.toString(),
           riskAlerts: data.riskAlerts
         };
       },

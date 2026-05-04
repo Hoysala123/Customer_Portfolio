@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration } from 'chart.js';
 import { AdminLayoutComponent } from '../layout/admin-layout.component';
@@ -67,7 +68,8 @@ export class AdminDashboardComponent implements OnInit {
 
   constructor(
     private adminApi: AdminApiService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -232,5 +234,9 @@ export class AdminDashboardComponent implements OnInit {
   onAdvisorChange(): void {
     this.loadPortfolioPerformance();
     this.loadAssetAllocation();
+  }
+
+  goToNotifications(): void {
+    this.router.navigate(['/admin/notification']);
   }
 }

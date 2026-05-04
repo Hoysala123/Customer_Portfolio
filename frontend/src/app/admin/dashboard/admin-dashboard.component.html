@@ -56,7 +56,9 @@
     </div>
 
     <!-- ACTIVE ALERTS -->
-    <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 flex items-center gap-4">
+    <div 
+      (click)="goToNotifications()"
+      class="bg-white rounded-xl shadow-md border border-gray-200 p-4 flex items-center gap-4 cursor-pointer hover:shadow-lg transition-shadow">
       <img src="assets\icons\notification.png" class="w-auto h-7" />
       <div>
         <p class="text-gray-600 text-sm font-medium">Active Alerts</p>
