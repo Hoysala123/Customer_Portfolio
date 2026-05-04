@@ -98,7 +98,7 @@ namespace backend.Controllers
                             ac.Action,
                             ac.Status,
                             ac.Timestamp,
-                            AdvisorName = advisors.FirstOrDefault().Name
+                            AdvisorName = advisors.FirstOrDefault() != null ? advisors.FirstOrDefault().Name : "Unknown Advisor"
                         })
                     .OrderByDescending(a => a.Timestamp)
                     .Take(4)
@@ -240,7 +240,7 @@ namespace backend.Controllers
 
             if (advisorId.HasValue)
             {
-                query = query.Where(a => a.Customer.AdvisorId == advisorId.Value);
+                query = query.Where(a => a.Customer != null && a.Customer.AdvisorId == advisorId.Value);
             }
 
             var result = await query
@@ -324,8 +324,9 @@ public async Task<IActionResult> GetAssetAllocation([FromQuery] Guid? advisorId 
                     totalUsers,
                     totalCustomers,
                     totalAssets,
-                    activeAlerts
+                    activeKycRequests
                 });
+
             }
             catch (Exception ex)
             {
