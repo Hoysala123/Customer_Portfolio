@@ -164,7 +164,7 @@ namespace backend.Data
                         CustomerId = customer.Id,
                         Name = "Bond Investment",
                         Type = "Bond",
-                        Amount = 30000M,
+                        Amount = 25000M,
                         Interest = 5M,
                         PurchaseDate = DateTime.UtcNow.AddMonths(-6),
                         DueDate = DateTime.UtcNow.AddMonths(6)

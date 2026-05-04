@@ -73,6 +73,7 @@ export class AdminDashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    console.log('AdminDashboardComponent initialized');
     this.loadAdvisors();
     this.loadDashboardSummary();
     this.loadCustomerReports();
@@ -147,8 +148,13 @@ export class AdminDashboardComponent implements OnInit {
       .getPortfolioPerformance(this.selectedAdvisorId)
       .subscribe({
         next: data => {
+          console.log('Portfolio Performance data received:', data);
           this.portfolioData = data;
           this.updateBarChart(data);
+        },
+        error: err => {
+          console.error('Error loading portfolio performance:', err);
+          this.updateBarChart([]);
         }
       });
   }
@@ -162,22 +168,49 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   private updateBarChart(data: any[]): void {
-  if (!data || data.length === 0) {
+  console.log('updateBarChart called with:', data);
+
+  if (!data) {
+    console.log('Data is null/undefined');
     return;
   }
 
-  const label = data[0].month || data[0].name;
+  if (data.length === 0) {
+    console.log('No data received from API - showing empty chart');
+    this.barChartData = {
+      labels: ['No Data'],
+      datasets: [
+        {
+          label: 'Portfolio Assets',
+          data: [0],
+          backgroundColor: '#3b82f6',
+          borderColor: '#1e40af',
+          borderWidth: 1
+        }
+      ]
+    };
+    this.cdr.detectChanges();
+    return;
+  }
 
-  // ✅ Use Total Assets as the single source of truth
-  const value = this.summary?.totalAssets ?? data[0].value;
+  console.log('Updating bar chart with data:', data);
+
+  // ✅ Extract all labels and only assets values (excluding liabilities)
+  const labels = data.map(d => d.month || d.name);
+  const values = data.map(d => d.value ?? 0);
+
+  console.log('Bar chart labels:', labels);
+  console.log('Bar chart values:', values);
 
   this.barChartData = {
-    labels: [label],
+    labels: labels,
     datasets: [
       {
-        label: 'Portfolio Performance',
-        data: [value],
-        backgroundColor: '#3b82f6'
+        label: 'Portfolio Assets',
+        data: values,
+        backgroundColor: '#3b82f6',
+        borderColor: '#1e40af',
+        borderWidth: 1
       }
     ]
   };

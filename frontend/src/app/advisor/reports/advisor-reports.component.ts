@@ -4,7 +4,7 @@ import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartType } from 'chart.js';
 import { AdvisorLayoutComponent } from '../layout/advisor-layout.component';
 import { AdvisorApiService } from '../api/advisor-api.service';
-
+ 
 @Component({
   selector: 'app-advisor-reports',
   standalone: true,
@@ -12,17 +12,17 @@ import { AdvisorApiService } from '../api/advisor-api.service';
   templateUrl: './advisor-reports.component.html'
 })
 export class AdvisorReportsComponent implements OnInit {
-
+ 
   /* Chart types */
   barChartType: ChartType = 'bar';
   pieChartType: ChartType = 'pie';
-
+ 
   /* BAR CHART */
   barChartData: ChartConfiguration<'bar'>['data'] = {
     labels: [],
     datasets: []
   };
-
+ 
   barChartOptions: ChartConfiguration<'bar'>['options'] = {
     responsive: true,
     maintainAspectRatio: false,
@@ -54,7 +54,7 @@ export class AdvisorReportsComponent implements OnInit {
       }
     }
   };
-
+ 
   /* PIE CHART */
   pieChartData: ChartConfiguration<'pie'>['data'] = {
     labels: ['Bonds', 'Fixed Deposit', 'Loans'],
@@ -63,7 +63,7 @@ export class AdvisorReportsComponent implements OnInit {
       backgroundColor: ['#60a5fa', '#34d399', '#fbbf24']
     }]
   };
-
+ 
   pieChartOptions: ChartConfiguration<'pie'>['options'] = {
     responsive: true,
     maintainAspectRatio: false,
@@ -72,17 +72,17 @@ export class AdvisorReportsComponent implements OnInit {
       tooltip: { bodyFont: { size: 11 } }
     }
   };
-
+ 
   customerReports: any[] = [];
-
+ 
   constructor(private advisorApi: AdvisorApiService) {}
-
+ 
   ngOnInit(): void {
     this.loadCustomerReports();
     this.loadPortfolioPerformance();
     this.loadOverallAnalysis();
   }
-
+ 
   loadCustomerReports(): void {
     this.advisorApi.getCustomerReports().subscribe({
       next: data => {
@@ -94,47 +94,33 @@ export class AdvisorReportsComponent implements OnInit {
       }
     });
   }
-
+ 
   /* ✅ FIXED HERE */
   loadPortfolioPerformance(): void {
-    this.advisorApi.getPortfolioPerformance().subscribe({
-      next: (response: any[]) => {
+  this.advisorApi.getPortfolioPerformance().subscribe({
+    next: (response: any[]) => {
 
-        if (!Array.isArray(response) || response.length === 0) {
-          return;
-        }
-
-        // ✅ API returns cumulative (80,000), normalize to real value (40,000)
-        const month = response[0].month;
-        const normalizedValue = response[0].value / 2;
-
-        this.barChartData = {
-          labels: [month],
-          datasets: [{
-            label: 'Total Assets',
-            data: [normalizedValue],
-            backgroundColor: '#3b82f6',
-            borderColor: '#2563eb',
-            borderWidth: 1
-          }]
-        };
-      },
-      error: err => {
-        console.error('Error loading portfolio performance:', err);
-        this.barChartData = {
-          labels: ['N/A'],
-          datasets: [{
-            label: 'Total Assets',
-            data: [0],
-            backgroundColor: '#3b82f6',
-            borderColor: '#2563eb',
-            borderWidth: 1
-          }]
-        };
+      if (!Array.isArray(response) || response.length === 0) {
+        return;
       }
-    });
-  }
 
+      this.barChartData = {
+        labels: response.map(r => r.month),
+        datasets: [{
+          label: 'Total Assets',
+          data: response.map(r => r.value),
+          backgroundColor: '#3b82f6',
+          borderColor: '#2563eb',
+          borderWidth: 1
+        }]
+      };
+    },
+    error: err => {
+      console.error('Error loading portfolio performance:', err);
+    }
+  });
+}
+ 
   loadOverallAnalysis(): void {
     this.advisorApi.getOverallAnalysis().subscribe({
       next: (data: any[]) => {
@@ -144,7 +130,7 @@ export class AdvisorReportsComponent implements OnInit {
           d.label?.toLowerCase().includes('fd')
         )?.value || 0;
         const loans = data.find(d => d.label?.toLowerCase().includes('loan'))?.value || 0;
-
+ 
         this.pieChartData = {
           labels: ['Bonds', 'Fixed Deposit', 'Loans'],
           datasets: [{
@@ -158,7 +144,7 @@ export class AdvisorReportsComponent implements OnInit {
       }
     });
   }
-
+ 
   downloadCustomerReport(customerId: string, name: string): void {
     this.advisorApi.downloadCustomerReport(customerId).subscribe({
       next: blob => {
@@ -175,3 +161,4 @@ export class AdvisorReportsComponent implements OnInit {
     });
   }
 }
+ 

@@ -26,6 +26,8 @@ namespace backend.Controllers
             this.logger = logger;
         }
 
+        // -------------------- CUSTOMERS --------------------
+
         [HttpGet("customers")]
         public async Task<IActionResult> Customers()
         {
@@ -61,6 +63,8 @@ namespace backend.Controllers
                 return BadRequest(new { message = $"Error: {ex.Message}" });
             }
         }
+
+        // -------------------- AUDIT LOGS --------------------
 
         [HttpGet("dashboard/audit-logs")]
         public async Task<IActionResult> GetAuditLogs()
@@ -117,6 +121,8 @@ namespace backend.Controllers
             }
         }
 
+        // -------------------- ADVISORS --------------------
+
         [HttpGet("advisors")]
         public async Task<IActionResult> Advisors()
         {
@@ -138,9 +144,6 @@ namespace backend.Controllers
         [HttpPost("advisors")]
         public async Task<IActionResult> AddAdvisor([FromBody] AddAdvisorDto dto)
         {
-            var adminId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "Unknown";
-            logger.LogInfo($"POST /api/admin/advisors called by admin: {adminId} - Adding advisor: {dto.Name}");
-            
             if (string.IsNullOrWhiteSpace(dto.Name) || string.IsNullOrWhiteSpace(dto.Email) || 
                 string.IsNullOrWhiteSpace(dto.Phone) || string.IsNullOrWhiteSpace(dto.PasswordHash))
             {
@@ -148,7 +151,6 @@ namespace backend.Controllers
                 return BadRequest(new { message = "All fields are required" });
             }
 
-            // Check if email already exists
             if (await db.Advisors.AnyAsync(a => a.Email == dto.Email))
             {
                 logger.LogWarn($"Advisor creation failed - Email already exists: {dto.Email}");
@@ -179,6 +181,8 @@ namespace backend.Controllers
             }
         }
 
+        // -------------------- CUSTOMER RISK --------------------
+
         [HttpPost("customers/{customerId}/risk")]
         public async Task<IActionResult> SetCustomerRisk(Guid customerId, RiskUpdateDto dto)
         {
@@ -191,11 +195,13 @@ namespace backend.Controllers
                 await admin.SetCustomerRiskAsync(customerId, normalized);
                 return Ok(new { riskLevel = normalized });
             }
-            catch (InvalidOperationException)
+            catch
             {
                 return NotFound();
             }
         }
+
+        // -------------------- CUSTOMER REPORT DOWNLOAD --------------------
 
         [HttpGet("customers/{customerId}/report")]
         public async Task<IActionResult> DownloadCustomerReport(Guid customerId)
@@ -206,184 +212,120 @@ namespace backend.Controllers
 
             var assets = await db.Assets.Where(a => a.CustomerId == customerId).ToListAsync();
             var loans = await db.Loans.Where(l => l.CustomerId == customerId).ToListAsync();
-            var investments = await db.Investments.Where(i => i.CustomerId == customerId).ToListAsync();
 
             string csv = "Name,PurchaseDate,DueDate,Interest,Amount,Sum\n";
 
-            decimal CalculateAssetSum(Asset asset)
-            {
-                if (asset.Type == "Bond" || asset.Type == "Bonds")
-                    return asset.Amount + (asset.Amount * 8 / 100);
-
-                if (asset.Type == "Fixed Deposit" || asset.Type == "FD")
-                    return asset.Amount + (asset.Amount * 7 / 100);
-
-                if (asset.Type == "Government Scheme")
-                    return asset.Amount + (asset.Amount * 7.5m / 100);
-
-                return asset.Amount;
-            }
-
             foreach (var asset in assets)
             {
-                var sum = CalculateAssetSum(asset);
-                csv += $"{asset.Name},{asset.PurchaseDate:yyyy-MM-dd},{asset.DueDate:yyyy-MM-dd},{asset.Interest},{asset.Amount},{sum}\n";
+                csv += $"{asset.Name},{asset.PurchaseDate:yyyy-MM-dd},{asset.DueDate:yyyy-MM-dd},{asset.Interest},{asset.Amount},{asset.Amount}\n";
             }
 
             foreach (var loan in loans)
             {
-                var timeInYears = (loan.DueDate - loan.IssuedDate).TotalDays / 365;
-                var sum = (loan.Amount * loan.Interest * (decimal)timeInYears) / 100;
+                var years = (loan.DueDate - loan.IssuedDate).TotalDays / 365;
+                var sum = (loan.Amount * loan.Interest * (decimal)years) / 100;
                 csv += $"{loan.Name},{loan.IssuedDate:yyyy-MM-dd},{loan.DueDate:yyyy-MM-dd},{loan.Interest},{loan.Amount},{sum}\n";
             }
 
             var bytes = System.Text.Encoding.UTF8.GetBytes(csv);
-            var fileName = $"customer-report-{customer.Name.Replace(' ', '-')}.csv";
-            return File(bytes, "text/csv", fileName);
+            return File(bytes, "text/csv", $"customer-report-{customer.Name}.csv");
         }
+
+        // -------------------- PORTFOLIO PERFORMANCE (MONTH-WISE ASSETS) --------------------
 
         [HttpGet("dashboard/portfolio-performance")]
         public async Task<IActionResult> GetPortfolioPerformance([FromQuery] Guid? advisorId = null)
         {
-            // Get investments data
-            IQueryable<Investment> investmentQuery = db.Investments.Include(i => i.Customer);
+            IQueryable<Asset> query = db.Assets.Include(a => a.Customer);
+
             if (advisorId.HasValue)
             {
-                investmentQuery = investmentQuery.Where(i => i.Customer != null && i.Customer.AdvisorId == advisorId.Value);
+                query = query.Where(a => a.Customer.AdvisorId == advisorId.Value);
             }
 
-            var investmentData = await investmentQuery
-                .GroupBy(i => new { i.Date.Year, i.Date.Month })
-                .Select(g => new
-                {
-                    year = g.Key.Year,
-                    month = g.Key.Month,
-                    value = g.Sum(i => i.Amount)
-                })
-                .ToListAsync();
-
-            // Get assets data
-            IQueryable<Asset> assetQuery = db.Assets.Include(a => a.Customer);
-            if (advisorId.HasValue)
-            {
-                assetQuery = assetQuery.Where(a => a.Customer != null && a.Customer.AdvisorId == advisorId.Value);
-            }
-
-            var assetData = await assetQuery
+            var result = await query
                 .GroupBy(a => new { a.PurchaseDate.Year, a.PurchaseDate.Month })
+                .OrderBy(g => g.Key.Year)
+                .ThenBy(g => g.Key.Month)
                 .Select(g => new
                 {
-                    year = g.Key.Year,
-                    month = g.Key.Month,
+                    month = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMM yyyy"),
                     value = g.Sum(a => a.Amount)
                 })
                 .ToListAsync();
 
-            // Combine investments and assets data
-            var combinedData = investmentData.Concat(assetData)
-                .GroupBy(d => new { d.year, d.month })
-                .Select(g => new
-                {
-                    month = new DateTime(g.Key.year, g.Key.month, 1).ToString("MMM yyyy"),
-                    value = g.Sum(d => d.value)
-                })
-                .OrderBy(d => d.month)
-                .ToList();
-
-            return Ok(combinedData);
-        }
-
-        [HttpGet("dashboard/asset-allocation")]
-        public async Task<IActionResult> GetAssetAllocation([FromQuery] Guid? advisorId = null)
-        {
-            // Get total assets (excluding fixed deposits)
-            IQueryable<Asset> assetQuery = db.Assets.Include(a => a.Customer);
-            if (advisorId.HasValue)
-            {
-                assetQuery = assetQuery.Where(a => a.Customer != null && a.Customer.AdvisorId == advisorId.Value);
-            }
-            var totalAssets = await assetQuery
-                .Where(a => a.Type != "Fixed Deposit" && a.Type != "FD")
-                .SumAsync(a => (decimal?)a.Amount) ?? 0;
-
-            // Get total fixed deposits
-            var totalFixedDeposits = await assetQuery
-                .Where(a => a.Type == "Fixed Deposit" || a.Type == "FD")
-                .SumAsync(a => (decimal?)a.Amount) ?? 0;
-
-            // Get total loans
-            IQueryable<Loan> loanQuery = db.Loans.Include(l => l.Customer);
-            if (advisorId.HasValue)
-            {
-                loanQuery = loanQuery.Where(l => l.Customer != null && l.Customer.AdvisorId == advisorId.Value);
-            }
-            var totalLoans = await loanQuery.SumAsync(l => (decimal?)l.Amount) ?? 0;
-
-            // Calculate percentages
-            var total = totalAssets + totalFixedDeposits + totalLoans;
-            var result = new List<dynamic>();
-
-            if (total > 0)
-            {
-                result.Add(new
-                {
-                    label = "Total Assets",
-                    percentage = Math.Round((double)totalAssets / (double)total * 100, 2)
-                });
-
-                result.Add(new
-                {
-                    label = "Total Fixed Deposits",
-                    percentage = Math.Round((double)totalFixedDeposits / (double)total * 100, 2)
-                });
-
-                result.Add(new
-                {
-                    label = "Total Loans",
-                    percentage = Math.Round((double)totalLoans / (double)total * 100, 2)
-                });
-            }
-            else
-            {
-                result.Add(new { label = "Total Assets", percentage = 0 });
-                result.Add(new { label = "Total Fixed Deposits", percentage = 0 });
-                result.Add(new { label = "Total Loans", percentage = 0 });
-            }
-
             return Ok(result);
         }
+
+        // -------------------- ASSET ALLOCATION --------------------
+
+        [HttpGet("dashboard/asset-allocation")]
+public async Task<IActionResult> GetAssetAllocation([FromQuery] Guid? advisorId = null)
+{
+    IQueryable<Asset> assetQuery = db.Assets.Include(a => a.Customer);
+
+    if (advisorId.HasValue)
+    {
+        assetQuery = assetQuery
+            .Where(a => a.Customer != null && a.Customer.AdvisorId == advisorId.Value);
+    }
+
+    // ✅ Bonds (includes Govt + normal bonds)
+    var bonds = await assetQuery
+        .Where(a => a.Type == "Bond" || a.Type == "Bonds" || a.Type == "govt")
+        .SumAsync(a => (decimal?)a.Amount) ?? 0;
+
+    // ✅ Fixed Deposits
+    var fixedDeposits = await assetQuery
+        .Where(a => a.Type == "Fixed Deposit" || a.Type == "FD")
+        .SumAsync(a => (decimal?)a.Amount) ?? 0;
+
+    // ✅ Loans
+    IQueryable<Loan> loanQuery = db.Loans.Include(l => l.Customer);
+    if (advisorId.HasValue)
+    {
+        loanQuery = loanQuery
+            .Where(l => l.Customer != null && l.Customer.AdvisorId == advisorId.Value);
+    }
+
+    var loans = await loanQuery.SumAsync(l => (decimal?)l.Amount) ?? 0;
+
+    var total = bonds + fixedDeposits + loans;
+
+    return Ok(new[]
+    {
+        new { label = "Bonds", percentage = total == 0 ? 0 : Math.Round((double)(bonds * 100 / total), 2) },
+        new { label = "Fixed Deposits", percentage = total == 0 ? 0 : Math.Round((double)(fixedDeposits * 100 / total), 2) },
+        new { label = "Loans", percentage = total == 0 ? 0 : Math.Round((double)(loans * 100 / total), 2) }
+    });
+}
+
+        // -------------------- ✅ FIXED DASHBOARD SUMMARY --------------------
 
         [HttpGet("dashboard/summary")]
         public async Task<IActionResult> GetDashboardSummary()
         {
             try
             {
-                // Total users (customers + advisors)
                 var totalCustomers = await db.Customers.CountAsync();
                 var totalAdvisors = await db.Advisors.CountAsync();
                 var totalUsers = totalCustomers + totalAdvisors;
 
-                // Total assets (sum of all customer investments and assets)
-                var investmentTotal = await db.Investments.SumAsync(i => (decimal?)i.Amount) ?? 0;
-                var assetTotal = await db.Assets.SumAsync(a => (decimal?)a.Amount) ?? 0;
-                var totalAssets = investmentTotal + assetTotal;
+                // Total assets (sum of all customer assets)
+                var totalAssets = await db.Assets.SumAsync(a => (decimal?)a.Amount) ?? 0;
 
                 // Active alerts: active KYC requests
                 var activeKycRequests = await db.Customers
                     .Where(c => c.KycStatus == "Pending")
                     .CountAsync();
 
-                var activeAlerts = activeKycRequests;
-
-                var summary = new DTOs.Admin.AdminDashboardSummaryDto
+                return Ok(new
                 {
-                    TotalUsers = totalUsers,
-                    TotalCustomers = totalCustomers,
-                    TotalAssets = (int)totalAssets,
-                    ActiveAlerts = activeAlerts
-                };
-
-                return Ok(summary);
+                    totalUsers,
+                    totalCustomers,
+                    totalAssets,
+                    activeAlerts
+                });
             }
             catch (Exception ex)
             {

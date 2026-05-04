@@ -14,7 +14,7 @@ export class AdvisorDashboardComponent implements OnInit {
 
   summary = {
     totalCustomers: 0,
-    totalAssets: '$0',
+    totalAssets: '0',
     riskAlerts: 0
   };
 
@@ -38,7 +38,7 @@ export class AdvisorDashboardComponent implements OnInit {
       next: data => {
         this.summary = {
           totalCustomers: data.totalCustomers,
-          totalAssets: `$${data.totalAssets.toLocaleString()}`,
+          totalAssets: data.totalAssets.toString(),
           riskAlerts: data.riskAlerts
         };
       },
