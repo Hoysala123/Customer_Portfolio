@@ -90,9 +90,12 @@ namespace backend.Services
                             .OrderByDescending(a => a.Timestamp)
                             .Select(a => a.Action)
                             .FirstOrDefault(),
-                        TotalAssets = db.Assets
+                        TotalAssets = (db.Assets
                             .Where(a => a.CustomerId == c.Id)
-                            .Sum(a => (decimal?)a.Amount) ?? 0,
+                            .Sum(a => (decimal?)a.Amount) ?? 0) + 
+                            (db.Investments
+                            .Where(i => i.CustomerId == c.Id)
+                            .Sum(i => (decimal?)i.Amount) ?? 0),
                         TotalLiabilities = db.Loans
                             .Where(l => l.CustomerId == c.Id)
                             .Sum(l => (decimal?)l.Amount) ?? 0
