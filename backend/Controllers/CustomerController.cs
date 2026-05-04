@@ -1,4 +1,5 @@
 using backend.Data;
+using backend.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
@@ -11,10 +12,12 @@ namespace backend.Controllers
     public class CustomerController : ControllerBase
     {
         private readonly FinVistaDbContext db;
+        private readonly ILogger<CustomerController> logger;
 
-        public CustomerController(FinVistaDbContext db)
+        public CustomerController(FinVistaDbContext db, ILogger<CustomerController> logger)
         {
             this.db = db;
+            this.logger = logger;
         }
 
         //  UPDATED (but structure unchanged)
@@ -26,9 +29,14 @@ namespace backend.Controllers
                 User.FindFirstValue(ClaimTypes.NameIdentifier)!
             );
 
+            logger.LogInfo($"GET /api/customer/{id} called by user: {authenticatedUserId}");
+
             // Prevent accessing other users' data
             if (id != authenticatedUserId)
+            {
+                logger.LogWarn($"Unauthorized access attempt - User {authenticatedUserId} tried to access customer {id}");
                 return Forbid();
+            }
 
             // Fetch customer
             var customer = db.Customers
@@ -45,24 +53,34 @@ namespace backend.Controllers
                 .FirstOrDefault();
 
             if (customer == null)
+            {
+                logger.LogWarn($"Customer not found - CustomerId: {authenticatedUserId}");
                 return NotFound();
+            }
 
+            logger.LogInfo($"Customer retrieved successfully - CustomerId: {authenticatedUserId}");
             return Ok(customer);
         }
 
         [HttpGet("kyc-status")]
-    public IActionResult GetKycStatus()
-    {
-        var customerId = Guid.Parse(
-            User.FindFirstValue(ClaimTypes.NameIdentifier)!
-        );
+        public IActionResult GetKycStatus()
+        {
+            var customerId = Guid.Parse(
+                User.FindFirstValue(ClaimTypes.NameIdentifier)!
+            );
 
-        var customer = db.Customers.FirstOrDefault(c => c.Id == customerId);
+            logger.LogInfo($"GET /api/customer/kyc-status called by user: {customerId}");
 
-        if (customer == null)
-            return NotFound("Customer not found");
+            var customer = db.Customers.FirstOrDefault(c => c.Id == customerId);
 
-        return Ok(new { status = customer.KycStatus });
-    }
+            if (customer == null)
+            {
+                logger.LogWarn($"KYC Status check failed - Customer not found: {customerId}");
+                return NotFound("Customer not found");
+            }
+
+            logger.LogInfo($"KYC Status retrieved - CustomerId: {customerId}, Status: {customer.KycStatus}");
+            return Ok(new { status = customer.KycStatus });
+        }
     }
 }

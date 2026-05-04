@@ -2,9 +2,11 @@ using backend.Data;
 using backend.DTOs.Advisor;
 using backend.Models;
 using backend.Services.Interfaces;
+using backend.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace backend.Controllers
 {
@@ -15,53 +17,166 @@ namespace backend.Controllers
     {
         private readonly IAdminService admin;
         private readonly FinVistaDbContext db;
+        private readonly ILogger<AdminController> logger;
 
-        public AdminController(IAdminService admin, FinVistaDbContext db)
+        public AdminController(IAdminService admin, FinVistaDbContext db, ILogger<AdminController> logger)
         {
             this.admin = admin;
             this.db = db;
+            this.logger = logger;
         }
 
         [HttpGet("customers")]
         public async Task<IActionResult> Customers()
         {
-            var data = await admin.GetAllCustomersAsync();
-            return Ok(data);
+            var adminId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "Unknown";
+            logger.LogInfo($"GET /api/admin/customers called by admin: {adminId}");
+            try
+            {
+                var data = await admin.GetAllCustomersAsync();
+                logger.LogInfo($"Retrieved all customers - Count: {data.Count()}");
+                return Ok(data);
+            }
+            catch (Exception ex)
+            {
+                logger.LogErr(ex, $"Failed to retrieve customers");
+                return BadRequest(new { message = $"Error: {ex.Message}" });
+            }
         }
 
         [HttpGet("reports/customers")]
         public async Task<IActionResult> GetCustomerReports()
         {
-            var data = await admin.GetCustomerReportsAsync();
-            return Ok(data);
+            var adminId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "Unknown";
+            logger.LogInfo($"GET /api/admin/reports/customers called by admin: {adminId}");
+            try
+            {
+                var data = await admin.GetCustomerReportsAsync();
+                logger.LogInfo($"Retrieved customer reports - Count: {data.Count()}");
+                return Ok(data);
+            }
+            catch (Exception ex)
+            {
+                logger.LogErr(ex, $"Failed to retrieve customer reports");
+                return BadRequest(new { message = $"Error: {ex.Message}" });
+            }
         }
 
         [HttpGet("dashboard/audit-logs")]
         public async Task<IActionResult> GetAuditLogs()
         {
-            var auditLogs = await db.AuditLogs
-                .OrderByDescending(a => a.Timestamp)
-                .Take(4)
-                .Select(a => new
-                {
-                    Name = db.Customers
-                        .Where(c => c.Id == a.CustomerId)
-                        .Select(c => c.Name)
-                        .FirstOrDefault() ?? "Unknown",
-                    a.Role,
-                    a.Action,
-                    a.Status
-                })
-                .ToListAsync();
+            var adminId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "Unknown";
+            logger.LogInfo($"GET /api/admin/dashboard/audit-logs called by admin: {adminId}");
+            try
+            {
+                var auditLogs = await db.AuditLogs
+                    .Join(db.Customers,
+                        a => a.CustomerId,
+                        c => c.Id,
+                        (a, c) => new
+                        {
+                            a.Id,
+                            CustomerName = c.Name,
+                            a.Role,
+                            a.Action,
+                            a.Status,
+                            a.Timestamp,
+                            c.AdvisorId
+                        })
+                    .GroupJoin(db.Advisors,
+                        ac => ac.AdvisorId,
+                        ad => ad.Id,
+                        (ac, advisors) => new
+                        {
+                            ac.Id,
+                            ac.CustomerName,
+                            ac.Role,
+                            ac.Action,
+                            ac.Status,
+                            ac.Timestamp,
+                            AdvisorName = advisors.FirstOrDefault().Name
+                        })
+                    .OrderByDescending(a => a.Timestamp)
+                    .Take(4)
+                    .Select(a => new
+                    {
+                        name = a.Role == "Advisor" ? (a.AdvisorName ?? "Unknown Advisor") : (a.CustomerName ?? "Unknown"),
+                        role = a.Role,
+                        action = a.Action,
+                        status = a.Status
+                    })
+                    .ToListAsync();
 
-            return Ok(auditLogs);
+                logger.LogInfo($"Retrieved audit logs - Count: {auditLogs.Count}");
+                return Ok(auditLogs);
+            }
+            catch (Exception ex)
+            {
+                logger.LogErr(ex, $"Failed to retrieve audit logs");
+                return BadRequest(new { message = $"Error: {ex.Message}" });
+            }
         }
 
         [HttpGet("advisors")]
         public async Task<IActionResult> Advisors()
         {
-            var data = await admin.GetAllAdvisorsAsync();
-            return Ok(data);
+            var adminId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "Unknown";
+            logger.LogInfo($"GET /api/admin/advisors called by admin: {adminId}");
+            try
+            {
+                var data = await admin.GetAllAdvisorsAsync();
+                logger.LogInfo($"Retrieved all advisors - Count: {data.Count()}");
+                return Ok(data);
+            }
+            catch (Exception ex)
+            {
+                logger.LogErr(ex, $"Failed to retrieve advisors");
+                return BadRequest(new { message = $"Error: {ex.Message}" });
+            }
+        }
+
+        [HttpPost("advisors")]
+        public async Task<IActionResult> AddAdvisor([FromBody] AddAdvisorDto dto)
+        {
+            var adminId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "Unknown";
+            logger.LogInfo($"POST /api/admin/advisors called by admin: {adminId} - Adding advisor: {dto.Name}");
+            
+            if (string.IsNullOrWhiteSpace(dto.Name) || string.IsNullOrWhiteSpace(dto.Email) || 
+                string.IsNullOrWhiteSpace(dto.Phone) || string.IsNullOrWhiteSpace(dto.PasswordHash))
+            {
+                logger.LogWarn($"Advisor creation failed - Missing required fields for: {dto.Email}");
+                return BadRequest(new { message = "All fields are required" });
+            }
+
+            // Check if email already exists
+            if (await db.Advisors.AnyAsync(a => a.Email == dto.Email))
+            {
+                logger.LogWarn($"Advisor creation failed - Email already exists: {dto.Email}");
+                return BadRequest(new { message = "Email already exists" });
+            }
+
+            try
+            {
+                var advisor = new Advisor
+                {
+                    Id = Guid.NewGuid(),
+                    Name = dto.Name,
+                    Email = dto.Email,
+                    Phone = dto.Phone,
+                    PasswordHash = dto.PasswordHash
+                };
+
+                db.Advisors.Add(advisor);
+                await db.SaveChangesAsync();
+
+                logger.LogInfo($"Advisor created successfully - AdvisorId: {advisor.Id}, Email: {advisor.Email}");
+                return Ok(new { message = "Advisor added successfully", advisorId = advisor.Id });
+            }
+            catch (Exception ex)
+            {
+                logger.LogErr(ex, $"Failed to add advisor - Email: {dto.Email}");
+                return BadRequest(new { message = $"Error: {ex.Message}" });
+            }
         }
 
         [HttpPost("customers/{customerId}/risk")]
@@ -248,8 +363,10 @@ namespace backend.Controllers
                 var totalAdvisors = await db.Advisors.CountAsync();
                 var totalUsers = totalCustomers + totalAdvisors;
 
-                // Total assets (sum of all customer assets)
-                var totalAssets = await db.Assets.SumAsync(a => (decimal?)a.Amount) ?? 0;
+                // Total assets (sum of all customer investments and assets)
+                var investmentTotal = await db.Investments.SumAsync(i => (decimal?)i.Amount) ?? 0;
+                var assetTotal = await db.Assets.SumAsync(a => (decimal?)a.Amount) ?? 0;
+                var totalAssets = investmentTotal + assetTotal;
 
                 // Active alerts: active KYC requests
                 var activeKycRequests = await db.Customers

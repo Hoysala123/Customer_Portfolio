@@ -1,6 +1,6 @@
 using backend.Data;
 using backend.DTOs.Auth;
-using backend.Services.Interfaces;   // ✅ REQUIRED
+using backend.Services.Interfaces;   //  REQUIRED
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Services.AuthService
@@ -19,9 +19,9 @@ namespace backend.Services.AuthService
         public async Task<AuthResponse> LoginAsync(AdminLoginRequest request)
         {
             var admin = await db.Admins
-                .FirstOrDefaultAsync(x => x.Email == request.Email);
+                .FirstOrDefaultAsync(x => x.Email == request.Username);
 
-            // ✅ Plain‑text comparison (as requested)
+            //  Plain‑text comparison (as requested)
             if (admin == null || admin.PasswordHash != request.Password)
                 throw new Exception("Invalid admin credentials");
 

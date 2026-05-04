@@ -53,28 +53,42 @@
 
       <div class="space-y-4">
 
-        <input [(ngModel)]="bondsForm.name"
-               placeholder="Bond Name"
-               class="input-premium" />
+        <!-- Bond Name -->
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-2">Bond Name</label>
+          <input [(ngModel)]="bondsForm.name"
+                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
 
+        <!-- Purchase Date with Date Picker -->
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-2">Purchase Date</label>
+          <input type="date"
+                 [(ngModel)]="bondsForm.purchaseDate"
+                 class="w-full px-4 py-2 opacity-60 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
 
-        <input [(ngModel)]="bondsForm.purchaseDate"
-                placeholder="YYYY-MM-DD Purchase Date"
-               
-               class="input-premium" />
+        <!-- Due Date with Date Picker -->
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-2">Maturity Date</label>
+          <input type="date"
+                 [(ngModel)]="bondsForm.dueDate"
+                 class="w-full px-4 py-2 opacity-60 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
 
-        <input [(ngModel)]="bondsForm.dueDate"
-              placeholder="YYYY-MM-DD Maturity Date"
-               
-               class="input-premium" />
+        <!-- Interest -->
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-2">Interest (%)</label>
+          <input [(ngModel)]="bondsForm.interest"
+                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
 
-        <input [(ngModel)]="bondsForm.interest"
-               placeholder="Interest (%)"
-               class="input-premium" />
-
-        <input [(ngModel)]="bondsForm.amount"
-               placeholder="Amount"
-               class="input-premium" />
+        <!-- Amount -->
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-2">Amount</label>
+          <input [(ngModel)]="bondsForm.amount"
+                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
 
       </div>
 
@@ -97,27 +111,42 @@
 
       <div class="space-y-4">
 
-        <input [(ngModel)]="fdForm.name"
-               placeholder="FD Name"
-               class="input-premium" />
+        <!-- FD Name -->
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-2">FD Name</label>
+          <input [(ngModel)]="fdForm.name"
+                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
 
-        <input [(ngModel)]="fdForm.purchaseDate"
-                placeholder="YYYY-MM-DD Purchase Date"
-               
-               class="input-premium" />
+        <!-- Purchase Date with Date Picker -->
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-2">Purchase Date</label>
+          <input type="date"
+                 [(ngModel)]="fdForm.purchaseDate"
+                 class="w-full px-4 py-2 opacity-60 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
 
-        <input [(ngModel)]="fdForm.dueDate"
-        placeholder="YYYY-MM-DD Maturity Date"
-               
-               class="input-premium" />
+        <!-- Due Date with Date Picker -->
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-2">Maturity Date</label>
+          <input type="date"
+                 [(ngModel)]="fdForm.dueDate"
+                 class="w-full px-4 py-2 opacity-60 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
 
-        <input [(ngModel)]="fdForm.interest"
-               placeholder="Interest (%)"
-               class="input-premium" />
+        <!-- Interest -->
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-2">Interest (%)</label>
+          <input [(ngModel)]="fdForm.interest"
+                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
 
-        <input [(ngModel)]="fdForm.amount"
-               placeholder="Amount"
-               class="input-premium" />
+        <!-- Amount -->
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-2">Amount</label>
+          <input [(ngModel)]="fdForm.amount"
+                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
 
       </div>
 
@@ -141,27 +170,42 @@
 
       <div class="space-y-4">
 
-        <input [(ngModel)]="loanForm.name"
-               placeholder="Loan Type"
-               class="input-premium" />
+        <!-- Loan Type -->
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-2">Loan Type</label>
+          <input [(ngModel)]="loanForm.name"
+                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
 
-        <input [(ngModel)]="loanForm.issuedDate"
-        placeholder="YYYY-MM-DD Issued Date"
-             
-               class="input-premium" />
+        <!-- Issued Date with Date Picker -->
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-2">Issued Date</label>
+          <input type="date"
+                 [(ngModel)]="loanForm.issuedDate"
+                 class="w-full px-4 py-2 opacity-60 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
 
-        <input [(ngModel)]="loanForm.dueDate"
-        placeholder="YYYY-MM-DD Due Date"
-               
-               class="input-premium" />
+        <!-- Due Date with Date Picker -->
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-2">Due Date</label>
+          <input type="date"
+                 [(ngModel)]="loanForm.dueDate"
+                 class="w-full px-4 py-2 opacity-60 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
 
-        <input [(ngModel)]="loanForm.interest"
-               placeholder="Interest (%)"
-               class="input-premium" />
+        <!-- Interest -->
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-2">Interest (%)</label>
+          <input [(ngModel)]="loanForm.interest"
+                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
 
-        <input [(ngModel)]="loanForm.amount"
-               placeholder="Amount"
-               class="input-premium" />
+        <!-- Amount -->
+        <div>
+          <label class="text-sm font-medium text-gray-700 block mb-2">Amount</label>
+          <input [(ngModel)]="loanForm.amount"
+                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
       </div>
 
       <button
