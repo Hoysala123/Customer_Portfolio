@@ -15,7 +15,7 @@ namespace backend.Models
 
         public string Status { get; set; } = "Pending";
 
-        // ⭐ OTP FIELDS (Required)
+        //  OTP FIELDS (Required)
         public string? OtpCode { get; set; }
         public DateTime? OtpGeneratedAt { get; set; }
         public bool IsOtpVerified { get; set; } = false;

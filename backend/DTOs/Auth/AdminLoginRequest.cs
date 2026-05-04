@@ -1,8 +1,11 @@
+using System.Text.Json.Serialization;
+
 namespace backend.DTOs.Auth
 {
     public class AdminLoginRequest
     {
-        public string Email { get; set; } = null!;
+        [JsonPropertyName("email")]
+        public string Username { get; set; } = null!;
         public string Password { get; set; } = null!;
     }
 }
