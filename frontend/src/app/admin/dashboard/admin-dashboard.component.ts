@@ -6,7 +6,7 @@ import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration } from 'chart.js';
 import { AdminLayoutComponent } from '../layout/admin-layout.component';
 import { AdminApiService } from '../api/admin-api.service';
-
+ 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
@@ -14,12 +14,12 @@ import { AdminApiService } from '../api/admin-api.service';
   templateUrl: './admin-dashboard.component.html'
 })
 export class AdminDashboardComponent implements OnInit {
-
+ 
   // Correct default
   selectedAdvisorId: string = '';
-
+ 
   advisors: { id: string; name: string }[] = [];
-
+ 
   barChartData: ChartConfiguration<'bar'>['data'] = {
     labels: ['Loading...'],
     datasets: [
@@ -32,7 +32,7 @@ export class AdminDashboardComponent implements OnInit {
       }
     ]
   };
-
+ 
   barChartOptions: ChartConfiguration<'bar'>['options'] = {
     responsive: true,
     maintainAspectRatio: false,
@@ -40,12 +40,12 @@ export class AdminDashboardComponent implements OnInit {
       y: { beginAtZero: true }
     }
   };
-
+ 
   pieChartData: ChartConfiguration<'pie'>['data'] = {
     labels: ['Bonds', 'Fixed Deposits', 'Loans'],
     datasets: []
   };
-
+ 
   pieChartOptions: ChartConfiguration<'pie'>['options'] = {
     responsive: true,
     maintainAspectRatio: false,
@@ -53,25 +53,25 @@ export class AdminDashboardComponent implements OnInit {
       legend: { display: false }
     }
   };
-
+ 
   summary?: {
     totalUsers: number;
     totalCustomers: number;
     totalAssets: number;
     activeAlerts: number;
   };
-
+ 
   portfolioData?: any[];
   assetAllocation?: any[];
   auditLogs: any[] = [];
   customerReports?: any[];
-
+ 
   constructor(
     private adminApi: AdminApiService,
     private cdr: ChangeDetectorRef,
     private router: Router
   ) {}
-
+ 
   ngOnInit(): void {
     console.log('AdminDashboardComponent initialized');
     this.loadAdvisors();
@@ -81,7 +81,7 @@ export class AdminDashboardComponent implements OnInit {
     this.loadPortfolioPerformance();
     this.loadAssetAllocation();
   }
-
+ 
   loadAdvisors(): void {
     this.adminApi.getAdvisors().subscribe({
       next: data => {
@@ -92,7 +92,7 @@ export class AdminDashboardComponent implements OnInit {
       }
     });
   }
-
+ 
   //FIXED: no arguments passed
   loadDashboardSummary(): void {
     console.log('Loading dashboard summary...');
@@ -104,7 +104,7 @@ export class AdminDashboardComponent implements OnInit {
       error: err => console.error('Error loading dashboard summary:', err)
     });
   }
-
+ 
   //FIXED: no arguments passed
   loadCustomerReports(): void {
     console.log('Loading customer reports...');
@@ -120,7 +120,7 @@ export class AdminDashboardComponent implements OnInit {
       }
     });
   }
-
+ 
   private normalizeCustomerReports(data: any[]): any[] {
     return data.map(report => ({
       id: report.id || report.Id,
@@ -135,13 +135,13 @@ export class AdminDashboardComponent implements OnInit {
       netWorth: report.netWorth ?? report.NetWorth ?? 0
     }));
   }
-
+ 
   loadAuditLogs(): void {
     this.adminApi.getAuditLogs().subscribe({
       next: data => this.auditLogs = data
     });
   }
-
+ 
   //These APIs ALREADY accept advisorId → leave untouched
   loadPortfolioPerformance(): void {
     this.adminApi
@@ -158,7 +158,7 @@ export class AdminDashboardComponent implements OnInit {
         }
       });
   }
-
+ 
   loadAssetAllocation(): void {
     this.adminApi
       .getAssetAllocation(this.selectedAdvisorId)
@@ -166,7 +166,7 @@ export class AdminDashboardComponent implements OnInit {
         next: data => this.updatePieChart(data)
       });
   }
-
+ 
   private updateBarChart(data: any[]): void {
   console.log('updateBarChart called with:', data);
 
@@ -229,7 +229,7 @@ export class AdminDashboardComponent implements OnInit {
       ]
     };
   }
-
+ 
   //Safe reload
   onAdvisorChange(): void {
     this.loadPortfolioPerformance();
@@ -240,3 +240,5 @@ export class AdminDashboardComponent implements OnInit {
     this.router.navigate(['/admin/notification']);
   }
 }
+ 
+ 
