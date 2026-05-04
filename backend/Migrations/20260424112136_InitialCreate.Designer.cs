@@ -12,8 +12,8 @@ using backend.Data;
 namespace backend.Migrations
 {
     [DbContext(typeof(FinVistaDbContext))]
-    [Migration("20260424080836_InitialSeed")]
-    partial class InitialSeed
+    [Migration("20260424112136_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

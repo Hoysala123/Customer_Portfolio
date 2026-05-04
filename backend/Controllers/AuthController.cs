@@ -111,5 +111,50 @@ namespace backend.Controllers
                 return BadRequest(new { message = $"Registration failed: {ex.Message}" });
             }
         }
+
+        // ======================================
+        // VALIDATE SESSION (PROTECTED)
+        // ======================================
+        [Authorize]
+        [HttpGet("validate-session")]
+        public IActionResult ValidateSession()
+        {
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            var username = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
+
+            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(role))
+            {
+                return Unauthorized(new { message = "Invalid session" });
+            }
+
+            // Store session info (optional - for tracking)
+            HttpContext.Session.SetString("UserId", userId);
+            HttpContext.Session.SetString("Role", role);
+            HttpContext.Session.SetString("LastActivity", DateTime.UtcNow.ToString());
+
+            return Ok(new
+            {
+                isValid = true,
+                userId = userId,
+                role = role,
+                username = username,
+                sessionId = HttpContext.Session.Id,
+                lastActivity = HttpContext.Session.GetString("LastActivity")
+            });
+        }
+
+        // ======================================
+        // LOGOUT (PROTECTED)
+        // ======================================
+        [Authorize]
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            // Clear session data
+            HttpContext.Session.Clear();
+            
+            return Ok(new { message = "Logged out successfully" });
+        }
     }
 }
