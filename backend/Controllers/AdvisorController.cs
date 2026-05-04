@@ -35,6 +35,10 @@ namespace backend.Controllers
                 .Where(i => customerIds.Contains(i.CustomerId))
                 .ToListAsync();
 
+            var assets = await db.Assets
+                .Where(a => customerIds.Contains(a.CustomerId))
+                .ToListAsync();
+
             var loans = await db.Loans
                 .Where(l => customerIds.Contains(l.CustomerId))
                 .ToListAsync();
@@ -51,7 +55,7 @@ namespace backend.Controllers
                 Username = c.Username,
                 Email = c.Email,
                 Phone = c.Phone,
-                Assets = investments.Where(i => i.CustomerId == c.Id).Sum(i => i.Amount).ToString("F0"),
+                Assets = assets.Where(a => a.CustomerId == c.Id).Sum(a => a.Amount).ToString("F0"),
                 Liabilities = loans.Where(l => l.CustomerId == c.Id).Sum(l => l.Amount).ToString("F0"),
                 Risk = riskLogs
                     .Where(a => a.CustomerId == c.Id)
@@ -233,8 +237,8 @@ namespace backend.Controllers
             return Ok(new { message = "Portfolio created successfully." });
         }
 
-        [HttpGet("dashboard/summary")]
-        public async Task<IActionResult> GetDashboardSummary()
+        [HttpGet("debug/assets")]
+        public async Task<IActionResult> DebugAssetsForAdvisor()
         {
             var advisorId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
@@ -243,24 +247,79 @@ namespace backend.Controllers
                 .Select(c => c.Id)
                 .ToListAsync();
 
-            var totalCustomers = customerIds.Count;
+            var assets = await db.Assets
+                .Where(a => customerIds.Contains(a.CustomerId))
+                .Select(a => new
+                {
+                    a.Id,
+                    a.Name,
+                    a.Type,
+                    a.Amount,
+                    a.PurchaseDate,
+                    CustomerName = a.Customer.Name
+                })
+                .ToListAsync();
 
-            var totalAssets = await db.Investments
+            var investments = await db.Investments
                 .Where(i => customerIds.Contains(i.CustomerId))
-                .SumAsync(i => i.Amount);
+                .Select(i => new
+                {
+                    i.Id,
+                    i.Type,
+                    i.Amount,
+                    i.Date,
+                    CustomerName = i.Customer.Name
+                })
+                .ToListAsync();
 
-            var riskAlerts = await db.Customers
-                .Where(c => c.AdvisorId == advisorId)
-                .Where(c => !db.Investments.Any(i => i.CustomerId == c.Id && i.Type == "Portfolio Created"))
-                .CountAsync();
+            var totalAssets = assets.Sum(a => a.Amount);
+            var totalInvestments = investments.Sum(i => i.Amount);
 
             return Ok(new
             {
-                totalCustomers,
+                advisorId,
+                customerIds,
+                assets,
+                investments,
                 totalAssets,
-                riskAlerts
+                totalInvestments,
+                combinedTotal = totalAssets + totalInvestments
             });
         }
+
+        [HttpGet("dashboard/summary")]
+public async Task<IActionResult> GetDashboardSummary()
+{
+    var advisorId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+    var customerIds = await db.Customers
+        .Where(c => c.AdvisorId == advisorId)
+        .Select(c => c.Id)
+        .ToListAsync();
+
+    var totalCustomers = customerIds.Count;
+
+    var totalAssets = (int)(
+        await db.Assets
+            .Where(a => customerIds.Contains(a.CustomerId))
+            .SumAsync(a => (decimal?)a.Amount) ?? 0
+    );
+
+    var riskAlerts = await db.Customers
+        .Where(c => c.AdvisorId == advisorId)
+        .Where(c => !db.Investments.Any(i =>
+            i.CustomerId == c.Id &&
+            i.Type == "Portfolio Created"))
+        .CountAsync();
+
+    return Ok(new
+    {
+        totalCustomers,
+        totalAssets,
+        riskAlerts
+    });
+}
+
 
         [HttpGet("dashboard/audit-logs")]
         public async Task<IActionResult> GetAuditLogs()
@@ -339,70 +398,52 @@ namespace backend.Controllers
         }
 
         [HttpGet("reports/portfolio-performance")]
-        public async Task<IActionResult> GetPortfolioPerformance()
+public async Task<IActionResult> GetPortfolioPerformance()
+{
+    var advisorId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+    var customerIds = await db.Customers
+        .Where(c => c.AdvisorId == advisorId)
+        .Select(c => c.Id)
+        .ToListAsync();
+
+    // Step 1: Group assets by month
+    var monthlyAssets = await db.Assets
+        .Where(a => customerIds.Contains(a.CustomerId))
+        .GroupBy(a => new { a.PurchaseDate.Year, a.PurchaseDate.Month })
+        .OrderBy(g => g.Key.Year)
+        .ThenBy(g => g.Key.Month)
+        .Select(g => new
         {
-            var advisorId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            MonthDate = new DateTime(g.Key.Year, g.Key.Month, 1),
+            MonthlyTotal = g.Sum(a => a.Amount)
+        })
+        .ToListAsync();
 
-            var customerIds = await db.Customers
-                .Where(c => c.AdvisorId == advisorId)
-                .Select(c => c.Id)
-                .ToListAsync();
+    // Step 2: Build cumulative total
+    decimal cumulative = 0;
+    var result = monthlyAssets.Select(m =>
+    {
+        cumulative += m.MonthlyTotal;
+        return new backend.DTOs.Advisor.PortfolioMonthDto
+        {
+            Month = m.MonthDate.ToString("MMM yyyy"),
+            Value = cumulative
+        };
+    }).ToList();
 
-            // Get all assets with customer info grouped by month
-            var assetData = await db.Assets
-                .Where(a => customerIds.Contains(a.CustomerId))
-                .Include(a => a.Customer)
-                .GroupBy(a => new { a.PurchaseDate.Year, a.PurchaseDate.Month })
-                .OrderBy(g => g.Key.Year)
-                .ThenBy(g => g.Key.Month)
-                .Select(g => new backend.DTOs.Advisor.PortfolioMonthDto
-                {
-                    Month = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMM yyyy"),
-                    Value = g.Sum(a => a.Amount)
-                })
-                .ToListAsync();
+    // Safety fallback
+    if (!result.Any())
+    {
+        result.Add(new backend.DTOs.Advisor.PortfolioMonthDto
+        {
+            Month = DateTime.UtcNow.ToString("MMM yyyy"),
+            Value = 0
+        });
+    }
 
-            // Get all investments with customer info grouped by month
-            var investmentData = await db.Investments
-                .Where(i => customerIds.Contains(i.CustomerId))
-                .Include(i => i.Customer)
-                .Where(i => i.Type != "Portfolio Created") // Exclude marker entries
-                .GroupBy(i => new { i.Date.Year, i.Date.Month })
-                .OrderBy(g => g.Key.Year)
-                .ThenBy(g => g.Key.Month)
-                .Select(g => new backend.DTOs.Advisor.PortfolioMonthDto
-                {
-                    Month = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMM yyyy"),
-                    Value = g.Sum(i => i.Amount)
-                })
-                .ToListAsync();
-
-            // Merge both data sources
-            var allMonths = assetData.Select(d => d.Month)
-                .Concat(investmentData.Select(d => d.Month))
-                .Distinct()
-                .OrderBy(m => DateTime.ParseExact(m, "MMM yyyy", System.Globalization.CultureInfo.InvariantCulture))
-                .ToList();
-
-            var mergedData = allMonths.Select(month => new backend.DTOs.Advisor.PortfolioMonthDto
-            {
-                Month = month,
-                Value = (assetData.FirstOrDefault(d => d.Month == month)?.Value ?? 0) +
-                        (investmentData.FirstOrDefault(d => d.Month == month)?.Value ?? 0)
-            }).ToList();
-
-            // If no data, return dummy data for visualization
-            if (!mergedData.Any())
-            {
-                mergedData = new List<backend.DTOs.Advisor.PortfolioMonthDto>
-                {
-                    new backend.DTOs.Advisor.PortfolioMonthDto { Month = DateTime.UtcNow.ToString("MMM yyyy"), Value = 0 }
-                };
-            }
-
-            return Ok(mergedData);
-        }
-
+    return Ok(result);
+}
         [HttpGet("reports/overall-analysis")]
         public async Task<IActionResult> GetOverallAnalysis()
         {
