@@ -179,36 +179,6 @@ namespace backend.Controllers
             }
         }
 
-        [HttpPost("advisors")]
-        public async Task<IActionResult> AddAdvisor([FromBody] AddAdvisorDto dto)
-        {
-            if (string.IsNullOrWhiteSpace(dto.Name) || string.IsNullOrWhiteSpace(dto.Email) || 
-                string.IsNullOrWhiteSpace(dto.Phone) || string.IsNullOrWhiteSpace(dto.PasswordHash))
-            {
-                return BadRequest(new { message = "All fields are required" });
-            }
-
-            // Check if email already exists
-            if (await db.Advisors.AnyAsync(a => a.Email == dto.Email))
-            {
-                return BadRequest(new { message = "Email already exists" });
-            }
-
-            var advisor = new Advisor
-            {
-                Id = Guid.NewGuid(),
-                Name = dto.Name,
-                Email = dto.Email,
-                Phone = dto.Phone,
-                PasswordHash = dto.PasswordHash
-            };
-
-            db.Advisors.Add(advisor);
-            await db.SaveChangesAsync();
-
-            return Ok(new { message = "Advisor added successfully", advisorId = advisor.Id });
-        }
-
         [HttpPost("customers/{customerId}/risk")]
         public async Task<IActionResult> SetCustomerRisk(Guid customerId, RiskUpdateDto dto)
         {
