@@ -303,35 +303,36 @@ public async Task<IActionResult> GetAssetAllocation([FromQuery] Guid? advisorId 
         // -------------------- ✅ FIXED DASHBOARD SUMMARY --------------------
 
         [HttpGet("dashboard/summary")]
-        public async Task<IActionResult> GetDashboardSummary()
+public async Task<IActionResult> GetDashboardSummary()
+{
+    try
+    {
+        var totalCustomers = await db.Customers.CountAsync();
+        var totalAdvisors = await db.Advisors.CountAsync();
+        var totalUsers = totalCustomers + totalAdvisors;
+
+        // Total assets
+        var totalAssets = await db.Assets.SumAsync(a => (decimal?)a.Amount) ?? 0;
+
+        // Active alerts = Pending KYC
+        var activeKycRequests = await db.Customers
+            .Where(c => c.KycStatus == "Pending")
+            .CountAsync();
+
+        return Ok(new
         {
-            try
-            {
-                var totalCustomers = await db.Customers.CountAsync();
-                var totalAdvisors = await db.Advisors.CountAsync();
-                var totalUsers = totalCustomers + totalAdvisors;
+            TotalUsers = totalUsers,
+            TotalCustomers = totalCustomers,
+            TotalAssets = totalAssets,
+            ActiveAlerts = activeKycRequests
+        });
 
-                // Total assets (sum of all customer assets)
-                var totalAssets = await db.Assets.SumAsync(a => (decimal?)a.Amount) ?? 0;
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new { error = ex.Message });
+    }
+}
 
-                // Active alerts: active KYC requests
-                var activeKycRequests = await db.Customers
-                    .Where(c => c.KycStatus == "Pending")
-                    .CountAsync();
-
-                return Ok(new
-                {
-                    totalUsers,
-                    totalCustomers,
-                    totalAssets,
-                    activeKycRequests
-                });
-
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
-        }
     }
 }
