@@ -28,6 +28,19 @@ builder.Services.AddDbContext<FinVistaDbContext>(options =>
 builder.Services.AddControllers();
 
 // ======================================
+// 2.1. SESSION SUPPORT
+// ======================================
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromHours(1);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.SameSite = SameSiteMode.None;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+});
+
+// ======================================
 // 3. SWAGGER WITH JWT SUPPORT
 // ======================================
 builder.Services.AddEndpointsApiExplorer();
@@ -87,11 +100,14 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuer = false,
         ValidateAudience = false,
         ValidateIssuerSigningKey = true,
+        ValidateLifetime = true,
+        RequireExpirationTime = true,
+        ClockSkew = TimeSpan.Zero,
         IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
         RoleClaimType = System.Security.Claims.ClaimTypes.Role
     };
 });
- 
+
 // ======================================
 // 5. ROLE-BASED AUTHORIZATION
 // ======================================
@@ -148,7 +164,12 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAngular");
 
 // ======================================
-// 11. AUTH MIDDLEWARE
+// 11. SESSION MIDDLEWARE
+// ======================================
+app.UseSession();
+
+// ======================================
+// 12. AUTH MIDDLEWARE
 // ======================================
 app.UseAuthentication();
 app.UseAuthorization();

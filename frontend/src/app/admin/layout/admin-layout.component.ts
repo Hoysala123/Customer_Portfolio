@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+import { IdleTimeoutService } from '../../services/idle-timeout.service';
 
 @Component({
   selector: 'app-admin-layout',
@@ -9,19 +11,27 @@ import { RouterModule, Router } from '@angular/router';
   templateUrl: './admin-layout.component.html',
   styleUrls: ['./admin-layout.component.css']
 })
-export class AdminLayoutComponent {
+export class AdminLayoutComponent implements OnInit, OnDestroy {
 
   adminName = 'Admin';
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private auth: AuthService,
+    private idleTimeout: IdleTimeoutService
+  ) {}
+
+  ngOnInit(): void {
+    this.idleTimeout.startMonitoring();
+  }
+
+  ngOnDestroy(): void {
+    this.idleTimeout.stopMonitoring();
+  }
 
   logout() {
-    // Clear session data
-    localStorage.removeItem('token');
-    localStorage.removeItem('role');
-    localStorage.removeItem('id');
-    localStorage.removeItem('kycStatus');
-    
+    this.idleTimeout.stopMonitoring();
+    this.auth.logout();
     console.log('Admin logged out successfully');
     this.router.navigate(['/login']);
   }

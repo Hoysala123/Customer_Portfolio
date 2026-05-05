@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
-import { RouterOutlet, Router } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { RouterOutlet, Router, NavigationEnd, RouteConfigLoadStart } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FooterComponent } from './footer/footer.component';
+import { filter } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -9,11 +10,28 @@ import { FooterComponent } from './footer/footer.component';
   imports: [RouterOutlet, FooterComponent, CommonModule],
   templateUrl: './app.component.html'
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
+  showFooter = false;
+
   constructor(private router: Router) {}
 
-  shouldShowFooter(): boolean {
-    const currentUrl = this.router.url;
-    return !currentUrl.includes('/login') && !currentUrl.includes('/signup') && !currentUrl.includes('/kyc');
+  ngOnInit() {
+    // Check initial route
+    this.updateFooter();
+
+    // Listen to route changes
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe(() => {
+        this.updateFooter();
+      });
+  }
+
+  private updateFooter() {
+    const url = this.router.url;
+    
+    // Hide footer on auth pages
+    const hideOnPaths = ['/login', '/signup', '/kyc', '/'];
+    this.showFooter = !hideOnPaths.includes(url);
   }
 }

@@ -288,6 +288,13 @@ namespace backend.Controllers
                     i.Type == "Portfolio Created"))
                 .CountAsync();
 
+            // var riskAlerts = await db.Customers
+            //     .Where(c => c.AdvisorId == advisorId)
+            //     .Where(c => !db.Investments
+            //         .Any(i => i.CustomerId == c.Id && i.Type == "Portfolio Created"))
+            //     .CountAsync();
+
+
             return Ok(new
             {
                 totalCustomers,
@@ -454,34 +461,36 @@ namespace backend.Controllers
         // ---------------------------------------------------
 
         [HttpGet("dashboard/summary")]
-public async Task<IActionResult> GetAdvisorDashboardSummary()
-{
-    var advisorId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        public async Task<IActionResult> GetAdvisorDashboardSummary()
+        {
+            var advisorId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-    var customerIds = await db.Customers
-        .Where(c => c.AdvisorId == advisorId)
-        .Select(c => c.Id)
-        .ToListAsync();
+            var customerIds = await db.Customers
+                .Where(c => c.AdvisorId == advisorId)
+                .Select(c => c.Id)
+                .ToListAsync();
 
-    int totalCustomers = customerIds.Count;
+            int totalCustomers = customerIds.Count;
 
-    decimal totalAssets = await db.Assets
-        .Where(a => customerIds.Contains(a.CustomerId))
-        .SumAsync(a => (decimal?)a.Amount) ?? 0;
+            decimal totalAssets = await db.Assets
+                .Where(a => customerIds.Contains(a.CustomerId))
+                .SumAsync(a => (decimal?)a.Amount) ?? 0;
 
-    // ✔ NEW LOGIC
-    int activeAlerts = await db.AuditLogs
-        .Where(a => customerIds.Contains(a.CustomerId))
-        .Where(a => a.Action == "Alert from advisor")
-        .Where(a => a.Status == "Success")
-        .CountAsync();
+            // ✅ THIS IS THE FIX
+            int riskAlerts = await db.Customers
+                .Where(c => c.AdvisorId == advisorId)
+                .CountAsync(c =>
+                    !db.Investments.Any(i =>
+                        i.CustomerId == c.Id &&
+                        i.Type == "Portfolio Created"
+                    ));
 
-    return Ok(new
-    {
-        TotalCustomers = totalCustomers,
-        TotalAssets = totalAssets,
-        ActiveAlerts = activeAlerts
-    });
-}
+            return Ok(new
+            {
+                TotalCustomers = totalCustomers,
+                TotalAssets = totalAssets,
+                RiskAlerts = riskAlerts
+            });
+        }
     }
 }
