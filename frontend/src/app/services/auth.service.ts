@@ -106,8 +106,7 @@ export class AuthService {
   }
 
   // Logout endpoints
-  logout(): Observable<any> {
-    const userId = localStorage.getItem('id');
+  logoutFromServer(): Observable<any> {
     const username = localStorage.getItem('username') || 'Unknown';
     this.logger.logAuthEvent('Logout', username);
     return this.http.post(`${this.api}/auth/logout`, {}).pipe(
