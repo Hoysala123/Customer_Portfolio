@@ -470,7 +470,7 @@ public async Task<IActionResult> GetAdvisorDashboardSummary()
         .SumAsync(a => (decimal?)a.Amount) ?? 0;
 
     // ✔ NEW LOGIC
-    int activeAlerts = await db.AuditLogs
+    int riskAlerts = await db.AuditLogs
         .Where(a => customerIds.Contains(a.CustomerId))
         .Where(a => a.Action == "Alert from advisor")
         .Where(a => a.Status == "Success")
@@ -480,7 +480,7 @@ public async Task<IActionResult> GetAdvisorDashboardSummary()
     {
         TotalCustomers = totalCustomers,
         TotalAssets = totalAssets,
-        ActiveAlerts = activeAlerts
+        RiskAlerts = riskAlerts
     });
 }
     }
