@@ -124,46 +124,52 @@ namespace backend.Services
                 var advisorsById = await db.Advisors
                     .ToDictionaryAsync(a => a.Id, a => a.Email);
 
-                var customers = await db.Customers
-                    .Select(c => new
-                    {
-                        c.Id,
-                        c.Name,
-                        c.Email,
-                        c.Phone,
-                        c.AdvisorId,
-                        c.KycStatus,
-                        RiskAction = db.AuditLogs
-                            .Where(a => a.CustomerId == c.Id && a.Action.StartsWith("Risk level set to "))
-                            .OrderByDescending(a => a.Timestamp)
-                            .Select(a => a.Action)
-                            .FirstOrDefault(),
-                        TotalAssets = (db.Assets
-                            .Where(a => a.CustomerId == c.Id)
-                            .Sum(a => (decimal?)a.Amount) ?? 0) + 
-                            (db.Investments
-                            .Where(i => i.CustomerId == c.Id)
-                            .Sum(i => (decimal?)i.Amount) ?? 0),
-                        TotalLiabilities = db.Loans
-                            .Where(l => l.CustomerId == c.Id)
-                            .Sum(l => (decimal?)l.Amount) ?? 0
-                    })
-                    .ToListAsync();
+                // Get all customers with their related data
+                var customers = await db.Customers.ToListAsync();
+                var assets = await db.Assets.ToListAsync();
+                var loans = await db.Loans.ToListAsync();
+                var auditLogs = await db.AuditLogs.ToListAsync();
 
-                var report = customers.Select(c => new DTOs.Admin.AdminCustomerReportDto
+                var report = customers.Select(c => 
                 {
-                    Id = c.Id,
-                    Name = c.Name,
-                    Email = c.Email,
-                    Phone = c.Phone ?? string.Empty,
-                    Advisor = c.AdvisorId.HasValue ? advisorsById.GetValueOrDefault(c.AdvisorId.Value, "Unassigned") : "Unassigned",
-                    KycStatus = c.KycStatus,
-                    Risk = !string.IsNullOrEmpty(c.RiskAction) && c.RiskAction.StartsWith("Risk level set to ")
-                        ? c.RiskAction.Substring("Risk level set to ".Length)
-                        : "Medium",
-                    TotalAssets = c.TotalAssets,
-                    TotalLiabilities = c.TotalLiabilities,
-                    NetWorth = c.TotalAssets - c.TotalLiabilities
+                    // ========== CALCULATE TOTAL ASSETS ==========
+                    decimal totalAssets = assets
+                        .Where(a => a.CustomerId == c.Id)
+                        .Sum(a => a.Amount);
+
+                    // ========== CALCULATE TOTAL LIABILITIES ==========
+                    decimal totalLiabilities = loans
+                        .Where(l => l.CustomerId == c.Id)
+                        .Sum(l => l.Amount);
+
+                    // ========== CALCULATE NET WORTH ==========
+                    decimal netWorth = totalAssets - totalLiabilities;
+
+                    // ========== GET RISK LEVEL ==========
+                    var riskAction = auditLogs
+                        .Where(a => a.CustomerId == c.Id && a.Action.StartsWith("Risk level set to "))
+                        .OrderByDescending(a => a.Timestamp)
+                        .FirstOrDefault()?
+                        .Action;
+
+                    var riskLevel = !string.IsNullOrEmpty(riskAction) && riskAction.StartsWith("Risk level set to ")
+                        ? riskAction.Substring("Risk level set to ".Length)
+                        : "Medium";
+
+                    return new DTOs.Admin.AdminCustomerReportDto
+                    {
+                        Id = c.Id,
+                        Name = c.Name,
+                        Email = c.Email,
+                        Phone = c.Phone ?? string.Empty,
+                        Advisor = c.AdvisorId.HasValue ? 
+                            advisorsById.GetValueOrDefault(c.AdvisorId.Value, "Unassigned") : "Unassigned",
+                        KycStatus = c.KycStatus,
+                        Risk = riskLevel,
+                        TotalAssets = totalAssets,
+                        TotalLiabilities = totalLiabilities,
+                        NetWorth = netWorth
+                    };
                 }).ToList();
 
                 logger.LogInfo($"Customer reports generated successfully - Count: {report.Count}");

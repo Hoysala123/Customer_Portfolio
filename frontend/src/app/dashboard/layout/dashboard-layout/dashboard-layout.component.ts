@@ -1,11 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterModule } from '@angular/router';
  
 import { DashboardHeaderComponent } from '../header/dashboard-header/dashboard-header.component';
 import { DashboardSidebarComponent } from '../sidebar/dashboard-sidebar/dashboard-sidebar.component';
 import { FooterComponent } from '../../../footer/footer.component';
-import { AuthService } from '../../../services/auth.service';  
+import { AuthService } from '../../../services/auth.service';
+import { IdleTimeoutService } from '../../../services/idle-timeout.service';
 import { Router } from '@angular/router';                      
  
 @Component({
@@ -21,7 +22,7 @@ import { Router } from '@angular/router';
   ],
   templateUrl: './dashboard-layout.component.html'
 })
-export class DashboardLayoutComponent implements OnInit {
+export class DashboardLayoutComponent implements OnInit, OnDestroy {
  
   pageTitle: string = 'Portfolio';
  
@@ -29,11 +30,15 @@ export class DashboardLayoutComponent implements OnInit {
   userName: string = '';
  
   constructor(
-    private auth: AuthService,    
-    private router: Router        
+    private auth: AuthService,
+    private idleTimeout: IdleTimeoutService,
+    private router: Router
   ) {}
  
   ngOnInit(): void {
+    // Start idle timeout monitoring
+    this.idleTimeout.startMonitoring();
+
     const id = localStorage.getItem('id');  // CUSTOMER ID from login
  
     if (id) {
@@ -47,12 +52,15 @@ export class DashboardLayoutComponent implements OnInit {
       });
     }
     }
+
+  ngOnDestroy(): void {
+    // Stop idle timeout monitoring when leaving dashboard
+    this.idleTimeout.stopMonitoring();
+  }
  
     logout() {
-      localStorage.removeItem('token');
-      localStorage.removeItem('role');
-      localStorage.removeItem('id');
-      localStorage.removeItem('kycStatus');
+      this.idleTimeout.stopMonitoring();
+      this.auth.logout();
       this.router.navigate(['/login']);
   }
 }

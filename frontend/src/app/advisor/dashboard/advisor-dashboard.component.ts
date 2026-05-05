@@ -36,15 +36,20 @@ export class AdvisorDashboardComponent implements OnInit {
   loadSummary() {
     this.advisorApi.getDashboardSummary().subscribe({
       next: data => {
+        console.log('Dashboard Summary Data:', data);
         this.summary = {
-          totalCustomers: data.totalCustomers,
-          totalAssets: data.totalAssets.toString(),
-          riskAlerts: data.riskAlerts
+          totalCustomers: data.totalCustomers || 0,
+          totalAssets: data.totalAssets?.toString() || '0',
+          riskAlerts: data.riskAlerts || 0
         };
+        console.log('Summary Updated:', this.summary);
       },
-      error: err => console.error('Error loading summary:', err)
+      error: err => {
+        console.error('Error loading summary:', err);
+      }
     });
   }
+
  
   loadAuditLogs() {
     this.advisorApi.getAuditLogs().subscribe({

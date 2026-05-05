@@ -80,6 +80,8 @@ export class AdminDashboardComponent implements OnInit {
     this.loadAuditLogs();
     this.loadPortfolioPerformance();
     this.loadAssetAllocation();
+    // Force change detection after a short delay
+    setTimeout(() => this.cdr.detectChanges(), 500);
   }
  
   loadAdvisors(): void {
@@ -111,11 +113,28 @@ export class AdminDashboardComponent implements OnInit {
     this.adminApi.getCustomerReports().subscribe({
       next: data => {
         console.log('Customer reports data received:', data);
-        this.customerReports = Array.isArray(data) ? this.normalizeCustomerReports(data) : [];
-        console.log('Normalized customer reports:', this.customerReports);
+        console.log('Response is array?', Array.isArray(data));
+        console.log('Response type:', typeof data);
+        console.log('Response length:', Array.isArray(data) ? data.length : 'N/A');
+        
+        if (Array.isArray(data)) {
+          this.customerReports = this.normalizeCustomerReports(data);
+          console.log('Normalized customer reports:', this.customerReports);
+          console.log('Number of reports after normalization:', this.customerReports.length);
+        } else {
+          console.error('Data is not an array:', data);
+          this.customerReports = [];
+        }
+        this.cdr.detectChanges();
       },
       error: err => {
         console.error('Error loading customer reports:', err);
+        console.error('Error details:', {
+          status: err?.status,
+          statusText: err?.statusText,
+          message: err?.message,
+          error: err?.error
+        });
         this.customerReports = [];
       }
     });
