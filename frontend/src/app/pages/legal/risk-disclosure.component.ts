@@ -52,7 +52,6 @@ import { RouterModule } from '@angular/router';
         </div>
       </div>
     </div>
-  </div>
   `
 })
 export class RiskDisclosureComponent {}

@@ -28,7 +28,7 @@ namespace backend.Services
 
             try
             {
-                var customers = await db.Customers.ToListAsync();
+                var customers = await db.Customers.Include(c => c.Advisor).ToListAsync();
                 var assets = await db.Assets.ToListAsync();
                 var loans = await db.Loans.ToListAsync();
 
