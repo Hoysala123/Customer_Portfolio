@@ -24,6 +24,34 @@ import { InvestmentFormComponent } from './dashboard/investments/investment-form
 import { AnalysisComponent } from './dashboard/analysis/analysis.component';
 import { ReportsComponent } from './dashboard/reports/reports.component';
 
+// PAGE IMPORTS - PRODUCTS
+import { GovernmentBondsComponent } from './pages/products/government-bonds.component';
+import { FixedDepositsComponent } from './pages/products/fixed-deposits.component';
+import { GovernmentSchemesComponent } from './pages/products/government-schemes.component';
+import { RetirementPlansComponent } from './pages/products/retirement-plans.component';
+import { PortfolioBuilderComponent as PortfolioBuilderPageComponent } from './pages/products/portfolio-builder.component';
+
+// PAGE IMPORTS - SUPPORT
+import { HelpCenterComponent } from './pages/support/help-center.component';
+import { AdvisorSupportComponent } from './pages/support/advisor-support.component';
+import { DocumentationComponent } from './pages/support/documentation.component';
+import { FaqsComponent } from './pages/support/faqs.component';
+import { InvestmentGuidanceComponent } from './pages/support/investment-guidance.component';
+
+// PAGE IMPORTS - LEGAL
+import { AmlPolicyComponent } from './pages/legal/aml-policy.component';
+import { PrivacyPolicyComponent } from './pages/legal/privacy-policy.component';
+import { CustomerAgreementComponent } from './pages/legal/customer-agreement.component';
+import { RiskDisclosureComponent } from './pages/legal/risk-disclosure.component';
+import { ReturnPolicyComponent } from './pages/legal/return-policy.component';
+
+// PAGE IMPORTS - COMPANY
+import { AboutFinVistaComponent } from './pages/company/about-finvista.component';
+import { OurAdvisorsComponent } from './pages/company/our-advisors.component';
+import { LeadershipComponent } from './pages/company/leadership.component';
+import { CareersComponent } from './pages/company/careers.component';
+import { ContactUsComponent } from './pages/company/contact-us.component';
+
 export const routes: Routes = [
 
   // Default → Login Page (with guard to ensure fresh start)
@@ -122,6 +150,42 @@ export const routes: Routes = [
       { path: 'reports', component: ReportsComponent }
     ]
   },
+
+  // ================================
+  // PRODUCTS PAGES
+  // ================================
+  { path: 'pages/products/government-bonds', component: GovernmentBondsComponent },
+  { path: 'pages/products/fixed-deposits', component: FixedDepositsComponent },
+  { path: 'pages/products/government-schemes', component: GovernmentSchemesComponent },
+  { path: 'pages/products/retirement-plans', component: RetirementPlansComponent },
+  { path: 'pages/products/portfolio-builder', component: PortfolioBuilderPageComponent },
+
+  // ================================
+  // SUPPORT PAGES
+  // ================================
+  { path: 'pages/support/help-center', component: HelpCenterComponent },
+  { path: 'pages/support/advisor-support', component: AdvisorSupportComponent },
+  { path: 'pages/support/documentation', component: DocumentationComponent },
+  { path: 'pages/support/faqs', component: FaqsComponent },
+  { path: 'pages/support/investment-guidance', component: InvestmentGuidanceComponent },
+
+  // ================================
+  // LEGAL PAGES
+  // ================================
+  { path: 'pages/legal/aml-policy', component: AmlPolicyComponent },
+  { path: 'pages/legal/privacy-policy', component: PrivacyPolicyComponent },
+  { path: 'pages/legal/customer-agreement', component: CustomerAgreementComponent },
+  { path: 'pages/legal/risk-disclosure', component: RiskDisclosureComponent },
+  { path: 'pages/legal/return-policy', component: ReturnPolicyComponent },
+
+  // ================================
+  // COMPANY PAGES
+  // ================================
+  { path: 'pages/company/about-finvista', component: AboutFinVistaComponent },
+  { path: 'pages/company/our-advisors', component: OurAdvisorsComponent },
+  { path: 'pages/company/leadership', component: LeadershipComponent },
+  { path: 'pages/company/careers', component: CareersComponent },
+  { path: 'pages/company/contact-us', component: ContactUsComponent },
 
   // Catch-all route - redirect to login
   { path: '**', redirectTo: 'login' }
