@@ -98,7 +98,7 @@ namespace backend.Controllers
                             ac.Action,
                             ac.Status,
                             ac.Timestamp,
-                            AdvisorName = advisors.FirstOrDefault() != null ? advisors.FirstOrDefault().Name : "Unknown Advisor"
+                            AdvisorName = advisors.Select(a => a.Name).FirstOrDefault() ?? "Unknown Advisor"
                         })
                     .OrderByDescending(a => a.Timestamp)
                     .Take(4)

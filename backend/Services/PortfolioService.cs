@@ -20,6 +20,34 @@ namespace backend.Services
             this.logger = logger;
         }
 
+        /// <summary>
+        /// Calculates risk level based on customer's assets and liabilities.
+        /// High risk: Liabilities are high relative to assets
+        /// Moderate risk: Assets and liabilities are balanced
+        /// Low risk: Assets are significantly more than liabilities
+        /// </summary>
+        public string CalculateRiskLevel(decimal totalAssets, decimal totalLiabilities)
+        {
+            if (totalAssets == 0 && totalLiabilities == 0)
+                return "Moderate"; // Default for new customers with no data
+
+            if (totalAssets == 0 && totalLiabilities > 0)
+                return "High"; // Only liabilities, no assets
+
+            decimal ratio = totalLiabilities > 0 ? totalAssets / totalLiabilities : decimal.MaxValue;
+
+            // If liabilities are high (ratio < 1.5), risk is high
+            if (ratio < 1.5m)
+                return "High";
+
+            // If assets are significantly more (ratio >= 3), risk is low
+            if (ratio >= 3m)
+                return "Low";
+
+            // Otherwise, balanced - moderate risk
+            return "Moderate";
+        }
+
         public async Task<object> GetPortfolioAsync(Guid customerId)
         {
             logger.LogInfo($"Retrieving portfolio - CustomerId: {customerId}");
@@ -38,16 +66,12 @@ namespace backend.Services
                     .Where(x => x.CustomerId == customerId)
                     .ToListAsync();
 
-                var riskLogs = await db.AuditLogs
-                    .Where(a => a.CustomerId == customerId && a.Action.StartsWith("Risk level set to "))
-                    .OrderByDescending(a => a.Timestamp)
-                    .ToListAsync();
+                // Calculate risk dynamically based on assets and liabilities
+                decimal totalAssets = assets.Sum(a => a.Amount);
+                decimal totalLiabilities = loans.Sum(l => l.Amount);
+                var calculatedRisk = CalculateRiskLevel(totalAssets, totalLiabilities);
 
-                var latestRisk = riskLogs
-                    .Select(a => a.Action.Substring("Risk level set to ".Length))
-                    .FirstOrDefault() ?? "Moderate";
-
-                logger.LogInfo($"Portfolio data loaded - CustomerId: {customerId}, Assets: {assets.Count}, Loans: {loans.Count}, Investments: {investments.Count}");
+                logger.LogInfo($"Portfolio data loaded - CustomerId: {customerId}, Assets: {assets.Count}, Loans: {loans.Count}, Investments: {investments.Count}, CalculatedRisk: {calculatedRisk}");
 
                 decimal CalculateAssetSum(Asset asset)
                 {
@@ -97,14 +121,19 @@ namespace backend.Services
                 var netWorth = assets.Sum(a => CalculateAssetSum(a))
                               - loans.Sum(l => l.Amount + (l.Amount * l.Interest * (decimal)((l.DueDate - l.IssuedDate).TotalDays / 365)) / 100);
 
-                logger.LogInfo($"Portfolio calculated successfully - CustomerId: {customerId}, NetWorth: {netWorth}, RiskLevel: {latestRisk}");
+                var riskLogs = await db.AuditLogs
+                    .Where(x => x.CustomerId == customerId && x.Action.Contains("Risk"))
+                    .OrderByDescending(x => x.Timestamp)
+                    .ToListAsync();
+
+                logger.LogInfo($"Portfolio calculated successfully - CustomerId: {customerId}, NetWorth: {netWorth}, RiskLevel: {calculatedRisk}");
 
                 return new
                 {
                     assets = assets,
                     loans = loans,
                     investments = investments,
-                    riskLevel = latestRisk,
+                    riskLevel = calculatedRisk,
                     latestRiskAlert = riskLogs.Select(a => a.Action).FirstOrDefault(),
                     riskAlerts = riskLogs.Select(a => a.Action).ToList(),
                     table = table,
