@@ -13,11 +13,13 @@ namespace backend.Services
     {
         private readonly FinVistaDbContext db;
         private readonly ILogger<AdminService> logger;
+        private readonly PortfolioService portfolioService;
 
-        public AdminService(FinVistaDbContext db, ILogger<AdminService> logger)
+        public AdminService(FinVistaDbContext db, ILogger<AdminService> logger, PortfolioService portfolioService)
         {
             this.db = db;
             this.logger = logger;
+            this.portfolioService = portfolioService;
         }
 
         public async Task<IEnumerable<object>> GetAllCustomersAsync()
@@ -26,7 +28,11 @@ namespace backend.Services
 
             try
             {
-                var result = await db.Customers
+                var customers = await db.Customers.ToListAsync();
+                var assets = await db.Assets.ToListAsync();
+                var loans = await db.Loans.ToListAsync();
+
+                var result = customers
                     .Select(c => new
                     {
                         c.Id,
@@ -36,13 +42,12 @@ namespace backend.Services
                         c.Phone,
                         Advisor = c.Advisor != null ? c.Advisor.Email : "Unassigned",
                         c.KycStatus,
-                        Risk = db.AuditLogs
-                            .Where(a => a.CustomerId == c.Id && a.Action.StartsWith("Risk level set to "))
-                            .OrderByDescending(a => a.Timestamp)
-                            .Select(a => a.Action.Substring("Risk level set to ".Length))
-                            .FirstOrDefault() ?? "Medium"
+                        Risk = portfolioService.CalculateRiskLevel(
+                            assets.Where(a => a.CustomerId == c.Id).Sum(a => a.Amount),
+                            loans.Where(l => l.CustomerId == c.Id).Sum(l => l.Amount)
+                        )
                     })
-                    .ToListAsync();
+                    .ToList();
 
                 logger.LogInfo($"All customers retrieved successfully - Count: {result.Count}");
                 return result;
@@ -56,33 +61,48 @@ namespace backend.Services
 
         public async Task SetCustomerRiskAsync(Guid customerId, string riskLevel)
         {
-            logger.LogInfo($"Setting customer risk - CustomerId: {customerId}, RiskLevel: {riskLevel}");
+            logger.LogInfo($"Calculating customer risk - CustomerId: {customerId}");
 
             try
             {
                 var customer = await db.Customers.FindAsync(customerId);
                 if (customer == null)
                 {
-                    logger.LogWarn($"Set customer risk failed - Customer not found: {customerId}");
+                    logger.LogWarn($"Calculate customer risk failed - Customer not found: {customerId}");
                     throw new InvalidOperationException("Customer not found");
                 }
+
+                // Get customer's assets and liabilities
+                var assets = await db.Assets
+                    .Where(a => a.CustomerId == customerId)
+                    .ToListAsync();
+
+                var loans = await db.Loans
+                    .Where(l => l.CustomerId == customerId)
+                    .ToListAsync();
+
+                decimal totalAssets = assets.Sum(a => a.Amount);
+                decimal totalLiabilities = loans.Sum(l => l.Amount);
+
+                // Calculate risk automatically
+                var calculatedRisk = portfolioService.CalculateRiskLevel(totalAssets, totalLiabilities);
 
                 db.AuditLogs.Add(new AuditLog
                 {
                     Id = Guid.NewGuid(),
                     CustomerId = customerId,
                     Role = "Admin",
-                    Action = $"Risk level set to {riskLevel}",
+                    Action = $"Risk level {calculatedRisk}",
                     Status = "Success",
                     Timestamp = DateTime.UtcNow
                 });
 
                 await db.SaveChangesAsync();
-                logger.LogInfo($"Customer risk set successfully - CustomerId: {customerId}, RiskLevel: {riskLevel}");
+                logger.LogInfo($"Risk level {calculatedRisk}");
             }
             catch (Exception ex)
             {
-                logger.LogErr(ex, $"Failed to set customer risk - CustomerId: {customerId}");
+                logger.LogErr(ex, $"Failed to calculate customer risk - CustomerId: {customerId}");
                 throw;
             }
         }
@@ -128,7 +148,6 @@ namespace backend.Services
                 var customers = await db.Customers.ToListAsync();
                 var assets = await db.Assets.ToListAsync();
                 var loans = await db.Loans.ToListAsync();
-                var auditLogs = await db.AuditLogs.ToListAsync();
 
                 var report = customers.Select(c => 
                 {
@@ -145,16 +164,8 @@ namespace backend.Services
                     // ========== CALCULATE NET WORTH ==========
                     decimal netWorth = totalAssets - totalLiabilities;
 
-                    // ========== GET RISK LEVEL ==========
-                    var riskAction = auditLogs
-                        .Where(a => a.CustomerId == c.Id && a.Action.StartsWith("Risk level set to "))
-                        .OrderByDescending(a => a.Timestamp)
-                        .FirstOrDefault()?
-                        .Action;
-
-                    var riskLevel = !string.IsNullOrEmpty(riskAction) && riskAction.StartsWith("Risk level set to ")
-                        ? riskAction.Substring("Risk level set to ".Length)
-                        : "Medium";
+                    // ========== CALCULATE RISK LEVEL ==========
+                    var riskLevel = portfolioService.CalculateRiskLevel(totalAssets, totalLiabilities);
 
                     return new DTOs.Admin.AdminCustomerReportDto
                     {

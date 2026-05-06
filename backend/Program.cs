@@ -125,6 +125,7 @@ builder.Services.AddScoped<CustomerAuthService>();
 builder.Services.AddScoped<AdminAuthService>();
 builder.Services.AddScoped<AdvisorAuthService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<PortfolioService>();
 builder.Services.AddScoped<IPortfolioService, PortfolioService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<OtpService>();
