@@ -1,103 +1,63 @@
-<footer class="w-auto bg-[#616566] text-gray-300 text-sm pt-6 pb-6 mt-8">
-
-  <div class="max-w-7xl mx-auto px-6">
-
+<footer class="w-full bg-[#616566] text-gray-300 text-sm pt-6 pb-6 mt-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
     <!-- TOP GRID -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10">
-
-      <!-- COLUMN 1 -->
-      <div>
-        <h3 class="text-lg font-semibold text-white mb-4">Products</h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 lg:gap-10">
+      <div *ngFor="let column of footerColumns" class="flex flex-col">
+        <h3 class="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4 cursor-pointer hover:text-blue-400 transition-colors duration-200">
+          {{ column.title }}
+        </h3>
         <ul class="space-y-2">
-          <li>Government Bonds</li>
-          <li>Fixed Deposits</li>
-          <li>Government Schemes</li>
-          <li>Retirement Plans</li>
-          <li>Portfolio Builder</li>
-        </ul>
-      </div>
-
-      <!-- COLUMN 2 -->
-      <div>
-        <h3 class="text-lg font-semibold text-white mb-4">Support</h3>
-        <ul class="space-y-2">
-          <li>Help Center</li>
-          <li>Advisor Support</li>
-          <li>Documentation</li>
-          <li>FAQs</li>
-          <li>Investment Guidance</li>
-        </ul>
-      </div>
-
-      <!-- COLUMN 3 -->
-      <div>
-        <h3 class="text-lg font-semibold text-white mb-4">Legal</h3>
-        <ul class="space-y-2">
-          <li>AML Policy</li>
-          <li>Privacy Policy</li>
-          <li>Customer Agreement</li>
-          <li>Risk Disclosure</li>
-          <li>Return Policy</li>
-        </ul>
-      </div>
-
-      <!-- COLUMN 4 -->
-      <div>
-        <h3 class="text-lg font-semibold text-white mb-4">Company</h3>
-        <ul class="space-y-2">
-          <li>About FinVista</li>
-          <li>Our Advisors</li>
-          <li>Leadership</li>
-          <li>Careers</li>
-          <li>Contact Us</li>
+          <li 
+            *ngFor="let item of column.items"
+            (click)="onItemClick(item)"
+            [class.active]="activeItem === item.label"
+            class="cursor-pointer transition-all duration-200 px-2 py-1 rounded -mx-2 hover:bg-[#505151] hover:text-white"
+            [ngClass]="{
+              'bg-blue-600 text-white font-semibold': activeItem === item.label,
+              'hover:text-blue-400': activeItem !== item.label
+            }"
+          >
+            {{ item.label }}
+          </li>
         </ul>
       </div>
     </div>
 
     <!-- SOCIAL ICONS -->
-    <!-- SOCIAL ICONS -->
-    <div class="flex justify-center gap-4 mt-3">
-
+    <div class="flex justify-center gap-4 md:gap-6 mt-6 md:mt-8 flex-wrap">
       <img 
-        src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/facebook.svg"
-        class="w-5 h-5 invert opacity-80 hover:opacity-100 transition"
-        alt="facebook"
+        *ngFor="let social of socialLinks"
+        (click)="onSocialClick(social)"
+        [src]="social.icon"
+        [alt]="social.name"
+        [class.active-social]="activeSocial === social.name"
+        class="w-5 h-5 sm:w-6 sm:h-6 invert opacity-80 hover:opacity-100 transition-all duration-300 cursor-pointer transform hover:scale-110"
+        [ngClass]="{
+          'scale-125 opacity-100': activeSocial === social.name
+        }"
+        title="Click to visit {{ social.name }}"
       >
-
-      <img 
-        src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/instagram.svg"
-        class="w-5 h-5 invert opacity-80 hover:opacity-100 transition"
-        alt="instagram"
-      >
-
-      <img 
-        src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/linkedin.svg"
-        class="w-5 h-5 invert opacity-80 hover:opacity-100 transition"
-        alt="linkedin"
-      >
-
-      <img 
-        src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/github.svg"
-        class="w-5 h-5 invert opacity-80 hover:opacity-100 transition"
-        alt="github"
-      >
-
     </div>
-
 
     <!-- BOTTOM TEXT -->
-    <div class="text-center text-gray-400 text-xs mt-4 leading-6">
+    <div class="text-center text-gray-400 text-xs sm:text-sm mt-6 md:mt-8 leading-6 px-2">
+      <div class="hidden md:block mb-4">
+        AML Policy | Privacy Policy | Customer Agreement | Risk Disclosure | Return Policy
+      </div>
+      <div class="md:hidden space-y-1 mb-4 text-xs">
+        <div>AML Policy | Privacy Policy</div>
+        <div>Customer Agreement | Risk Disclosure</div>
+        <div>Return Policy</div>
+      </div>
 
-      AML Policy | Privacy Policy | Customer Agreement | Risk Disclosure | Return Policy
-
-      <br />
-
-      © 2026 FinVista, registration number: 13210109.
-      E‑mail:
-      
-    <a href="mailto:support&#64;finVista.com" class="hover:underline">
-      support&#64;finVista.com
-    </a>
+      <p>© 2026 FinVista, registration number: 13210109.</p>
+      <p>
+        E-mail:
+        <a href="mailto:support&#64;finVista.com" class="text-blue-400 hover:text-blue-300 hover:underline transition-colors duration-200">
+          support&#64;finVista.com
+        </a>
+      </p>
     </div>
 
   </div>
